@@ -33,6 +33,13 @@ doc:
 	cargo doc
 
 
+# TEST
+
+lint: lint-commit-messages
+lint-commit-messages:
+	./scripts/lint-commit-messages.sh
+
+
 # TOOLBOX
 
 toolbox-build:
