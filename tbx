@@ -1,0 +1,72 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if [ -e /.waketimed-toolbox ]; then
+    echo "ERROR: You're already within a waketimed toolbox container."
+    echo "Calls to toolbox shouldn't be nested."
+    exit 1
+fi
+
+CONTAINER_MGR=${CONTAINER_MGR:-podman}
+DIR=$(dirname $(realpath $0))
+PROJECT_DIR=$(realpath "$DIR")
+PROJECT_TOOLBOX_IMAGE="${PROJECT_TOOLBOX_IMAGE:-localhost/waketimed_toolbox_builder}"
+if [ -t 1 ]; then
+    TOOLBOX_TTY="${TOOLBOX_TTY:--ti}"
+else
+    TOOLBOX_TTY="${TOOLBOX_TTY:-}"
+fi
+
+if ! $CONTAINER_MGR images | grep "^$PROJECT_TOOLBOX_IMAGE \\+latest " &> /dev/null; then
+    pushd "$PROJECT_DIR"
+    make toolbox-build
+    popd
+fi
+
+IDX=0
+while $CONTAINER_MGR inspect waketimed_$IDX &> /dev/null; do
+    ((IDX++))
+done || true
+
+mkdir -p $PROJECT_DIR/tmp/cargo
+
+PASS_THROUGH_VARS=$(compgen -A variable | grep '^WAKETIMED_' | awk '{ print "-e " $0; }' | tr '\n' ' ' || true)
+
+if [ -z "${DESKTOP_PASS_THROUGH+x}" ]; then
+    # This allows the container to run the app inside and have it
+    # connect with the user's desktop. It also allows running GDB on
+    # it.
+
+    DESKTOP_PASS_THROUGH="\
+        -v $XDG_RUNTIME_DIR:$XDG_RUNTIME_DIR \
+        -e WAYLAND_DISPLAY \
+        -e DBUS_SESSION_BUS_ADDRESS \
+        -e DESKTOP_SESSION \
+        -e DISPLAY \
+        -e XDG_CURRENT_DESKTOP \
+        -e XDG_DATA_DIRS \
+        -e XDG_MENU_PREFIX \
+        -e XDG_RUNTIME_DIR \
+        -e XDG_SEAT \
+        -e XDG_SESSION_DESKTOP \
+        -e XDG_SESSION_ID \
+        -e XDG_SESSION_TYPE \
+        -e XDG_VTNR \
+        "
+fi
+
+$CONTAINER_MGR run \
+       --name waketimed_$IDX \
+       --detach-keys='ctrl-^' \
+       $TOOLBOX_TTY \
+       --rm \
+       --privileged \
+       -v "$PROJECT_DIR/tmp/cargo:/root/.cargo:z" \
+       -v "$PROJECT_DIR:/root/waketimed:z" \
+       -e "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.cargo/bin" \
+       ${DESKTOP_PASS_THROUGH} \
+       ${PASS_THROUGH_VARS} \
+       ${PROJECT_TOOLBOX_ARGS:-} \
+       "$PROJECT_TOOLBOX_IMAGE" \
+       "$@"

@@ -1,0 +1,21 @@
+[package]
+name = "waketimed"
+version = "0.1.0"
+authors = ["waketimed project contributors"]
+license = "MIT"
+readme = "README.md"
+# repository = ""
+# documentation = ""
+# homepage = ""
+description = """
+Real-time clock suspend/wake-up scheduling daemon.
+"""
+keywords = ["suspend", "resume", "sleep", "wake", "rtc", "rtcwake"]
+edition = "2021"
+
+[[bin]]
+name = "waketimed"
+path = "src/main.rs"
+
+[dependencies]
+waketimed_core = { path = "../waketimed_core" }

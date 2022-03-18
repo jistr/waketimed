@@ -1,0 +1,2 @@
+[workspace]
+members = ['waketimed_core', 'waketimed', 'waketimectl']

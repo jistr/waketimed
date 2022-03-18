@@ -1,0 +1,4 @@
+FROM registry.fedoraproject.org/fedora:35
+ADD src /src
+RUN bash /src/build.sh
+WORKDIR /root/waketimed

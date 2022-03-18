@@ -1,0 +1,15 @@
+[package]
+name = "waketimed_core"
+version = "0.1.0"
+authors = ["waketimed project contributors"]
+license = "MIT"
+readme = "README.md"
+# repository = ""
+# documentation = ""
+# homepage = ""
+description = """
+Library of commons for subprojects of waketimed, \
+the real-time clock suspend/wake-up scheduling daemon.
+"""
+keywords = ["suspend", "resume", "sleep", "wake", "rtc", "rtcwake"]
+edition = "2021"
