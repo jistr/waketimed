@@ -21,6 +21,6 @@ path = "src/main.rs"
 waketimed_core = { path = "../waketimed_core" }
 
 anyhow = { version = "1.0.56" }
-config = { version = "0.12" }
 serde = { version = "1.0.136" }
+serde_derive = { version = "1.0.136" }
 serde_yaml = { version = "0.8.23" }

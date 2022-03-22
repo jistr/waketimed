@@ -1,21 +1,17 @@
 use anyhow::{Context, Error as AnyError};
-use serde::{Deserialize, Serialize};
+use serde_derive::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::env;
 use std::fs::File;
+use std::path::Path;
 use std::rc::Rc;
 
-static mut CONFIG: Option<Rc<Config>> = None;
+static mut CONFIG: Option<Rc<RefCell<Config>>> = None;
 const CONFIG_FILE_VAR: &str = "WAKETIMED_CONFIG";
 const DEFAULT_CONFIG_FILE: &str = "/etc/waketimed/config.yaml";
 
-#[derive(Debug, Default)]
-pub struct Config {
-    data: RefCell<ConfigData>,
-}
-
 #[derive(Debug, Default, Serialize, Deserialize)]
-struct ConfigData {
+pub struct Config {
     // Time to stay up (prevent sleep) after waketimed starts, in
     // seconds. Results in automatic creation of a "stay up until"
     // rule. Should waketimed get misconfigured and put the device to
@@ -47,24 +43,67 @@ struct ConfigData {
 }
 
 pub fn load() -> Result<(), AnyError> {
-    let cfg_path = env::var(CONFIG_FILE_VAR).unwrap_or_else(|_| DEFAULT_CONFIG_FILE.to_string());
-    let cfg_reader = File::open(&cfg_path)
-        .with_context(|| format!("Failed to open config file '{}'", &cfg_path))?;
-    let cfg_data: ConfigData = serde_yaml::from_reader(cfg_reader)
-        .with_context(|| format!("Failed parse config file '{}'", &cfg_path))?;
+    let mut cfg_path_explicit = true;
+    let cfg_path = env::var(CONFIG_FILE_VAR).unwrap_or_else(|_| {
+        cfg_path_explicit = false;
+        DEFAULT_CONFIG_FILE.to_string()
+    });
+
+    let mut cfg: Config = if !cfg_path_explicit && !Path::new(&cfg_path).exists() {
+        // If config path was not provided explicitly, and the default
+        // config does not exist, let's just use built-in defaults.
+        Config::default()
+    } else {
+        let cfg_reader = File::open(&cfg_path)
+            .with_context(|| format!("Failed to open config file '{}'", &cfg_path))?;
+        serde_yaml::from_reader(cfg_reader)
+            .with_context(|| format!("Failed parse config file '{}'", &cfg_path))?
+    };
+
+    populate_config_from_env(&mut cfg)?;
+    repair_config(&mut cfg)?;
+
     unsafe {
-        CONFIG = Some(Rc::new(Config {
-            data: RefCell::new(cfg_data),
-        }));
+        CONFIG = Some(Rc::new(RefCell::new(cfg)));
     }
     Ok(())
 }
 
-pub fn get_config() -> Rc<Config> {
+pub fn get_config() -> Rc<RefCell<Config>> {
     unsafe {
         CONFIG.clone()
-            .expect("Called config::get but config doesn't exist yet.")
+            .expect("Called get_config but config doesn't exist yet.")
     }
+}
+
+fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
+    if let Ok(value) = env::var("WAKETIMED_STARTUP_AWAKE_TIME") {
+        cfg.startup_awake_time = value.parse::<u32>()?;
+    }
+    if let Ok(value) = env::var("WAKETIMED_MINIMUM_AWAKE_TIME") {
+        cfg.minimum_awake_time = value.parse::<u32>()?;
+    }
+    if let Ok(value) = env::var("WAKETIMED_STAYUP_CLEARED_AWAKE_TIME") {
+        cfg.stayup_cleared_awake_time = value.parse::<u32>()?;
+    }
+    if let Ok(value) = env::var("WAKETIMED_STAYUP_RULE_CHECK_PERIOD") {
+        cfg.stayup_rule_check_period = value.parse::<u32>()?;
+    }
+    if let Ok(value) = env::var("WAKETIMED_SLEEP_APPROACHING_SIGNAL_INTERVALS") {
+        let mut intervals: Vec<u32> = vec![];
+        for interval_str in value.split(',') {
+            let interval = interval_str.parse::<u32>()?;
+            intervals.push(interval);
+        }
+        cfg.sleep_approaching_signal_intervals = intervals;
+    }
+    Ok(())
+}
+
+fn repair_config(cfg: &mut Config) -> Result<(), AnyError> {
+    cfg.sleep_approaching_signal_intervals.sort_by(|a, b| b.cmp(a));  // descending ordering
+    cfg.sleep_approaching_signal_intervals.dedup();
+    Ok(())
 }
 
 fn default_startup_awake_time() -> u32 {
