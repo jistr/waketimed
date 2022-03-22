@@ -39,6 +39,16 @@ lint: lint-commit-messages
 lint-commit-messages:
 	./scripts/lint-commit-messages.sh
 
+test: test-waketimed_core test-waketimed test-waketimectl
+
+test-waketimed:
+	cd waketimed && cargo test
+
+test-waketimed_core:
+	cd waketimed_core && cargo test
+
+test-waketimectl:
+	cd waketimectl && cargo test
 
 # TOOLBOX
 
