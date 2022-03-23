@@ -1,4 +1,5 @@
 use anyhow::{Context, Error as AnyError};
+use log::debug;
 use serde_derive::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::env;
@@ -12,6 +13,9 @@ const DEFAULT_CONFIG_FILE: &str = "/etc/waketimed/config.yaml";
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {
+    // Log level.
+    #[serde(default = "default_log")]
+    pub log: String,
     // Time to stay up (prevent sleep) after waketimed starts, in
     // seconds. Results in automatic creation of a "stay up until"
     // rule. Should waketimed get misconfigured and put the device to
@@ -76,7 +80,16 @@ pub fn get_config() -> Rc<RefCell<Config>> {
     }
 }
 
+pub fn log_config() -> Result<(), AnyError> {
+    let cfg = get_config();
+    debug!("Config settings:\n{}", serde_yaml::to_string::<Config>(&cfg.borrow())?);
+    Ok(())
+}
+
 fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
+    if let Ok(value) = env::var("WAKETIMED_LOG") {
+        cfg.log = value;
+    }
     if let Ok(value) = env::var("WAKETIMED_STARTUP_AWAKE_TIME") {
         cfg.startup_awake_time = value.parse::<u32>()?;
     }
@@ -104,6 +117,10 @@ fn repair_config(cfg: &mut Config) -> Result<(), AnyError> {
     cfg.sleep_approaching_signal_intervals.sort_by(|a, b| b.cmp(a));  // descending ordering
     cfg.sleep_approaching_signal_intervals.dedup();
     Ok(())
+}
+
+fn default_log() -> String {
+    "info".to_string()
 }
 
 fn default_startup_awake_time() -> u32 {
