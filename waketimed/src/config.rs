@@ -77,14 +77,18 @@ pub fn load() -> Result<(), AnyError> {
 
 pub fn get_config() -> Rc<RefCell<Config>> {
     unsafe {
-        CONFIG.clone()
+        CONFIG
+            .clone()
             .expect("Called get_config but config doesn't exist yet.")
     }
 }
 
 pub fn log_config() -> Result<(), AnyError> {
     let cfg = get_config();
-    debug!("Config settings:\n{}", serde_yaml::to_string::<Config>(&cfg.borrow())?);
+    debug!(
+        "Config settings:\n{}",
+        serde_yaml::to_string::<Config>(&cfg.borrow())?
+    );
     Ok(())
 }
 
@@ -116,7 +120,8 @@ fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
 }
 
 fn repair_config(cfg: &mut Config) -> Result<(), AnyError> {
-    cfg.sleep_approaching_signal_intervals.sort_by(|a, b| b.cmp(a));  // descending ordering
+    cfg.sleep_approaching_signal_intervals
+        .sort_by(|a, b| b.cmp(a)); // descending ordering
     cfg.sleep_approaching_signal_intervals.dedup();
     Ok(())
 }
@@ -142,5 +147,5 @@ fn default_stayup_rule_check_period() -> u32 {
 }
 
 fn default_sleep_approaching_signal_intervals() -> Vec<u32> {
-    vec!(10, 5, 4, 3, 2, 1)
+    vec![10, 5, 4, 3, 2, 1]
 }

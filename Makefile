@@ -33,11 +33,30 @@ doc:
 	cargo doc
 
 
-# TEST
+# LINT
 
-lint: lint-commit-messages
+lint: lint-commit-messages lint-clippy lint-fmt
+
 lint-commit-messages:
 	./scripts/lint-commit-messages.sh
+
+lint-fmt:
+	cargo fmt --check
+
+lint-clippy:
+	cargo clippy -- -D warnings $(WAKETIMED_LINT_CLIPPY_ARGS)
+
+
+fix: fix-clippy fix-fmt
+
+fix-clippy:
+	cargo clippy --fix --allow-dirty
+
+fix-fmt:
+	cargo fmt
+
+
+# TEST
 
 test: test-waketimed_core test-waketimed test-waketimectl
 
