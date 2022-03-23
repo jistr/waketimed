@@ -11,7 +11,7 @@ static mut CONFIG: Option<Rc<RefCell<Config>>> = None;
 const CONFIG_FILE_VAR: &str = "WAKETIMED_CONFIG";
 const DEFAULT_CONFIG_FILE: &str = "/etc/waketimed/config.yaml";
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     // Log level.
     #[serde(default = "default_log")]
@@ -55,8 +55,10 @@ pub fn load() -> Result<(), AnyError> {
 
     let mut cfg: Config = if !cfg_path_explicit && !Path::new(&cfg_path).exists() {
         // If config path was not provided explicitly, and the default
-        // config does not exist, let's just use built-in defaults.
-        Config::default()
+        // config does not exist, let's just use built-in defaults. We
+        // can't use `Config::default()`, as it would ignore serde
+        // defaults.
+        serde_yaml::from_str("{}")?
     } else {
         let cfg_reader = File::open(&cfg_path)
             .with_context(|| format!("Failed to open config file '{}'", &cfg_path))?;
