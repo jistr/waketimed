@@ -1,6 +1,7 @@
-extern crate waketimed_core as core;
+extern crate waketimed_core as wd_core;
 
 mod config;
+mod dbus;
 
 use anyhow::Error as AnyError;
 
@@ -10,7 +11,12 @@ fn main() -> Result<(), AnyError> {
     config::load()?;
     setup_logger();
     config::log_config()?;
-    Ok(())
+
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_io()
+        .enable_time()
+        .build()?;
+    runtime.block_on(async_main())
 }
 
 fn setup_logger() {
@@ -18,4 +24,10 @@ fn setup_logger() {
     env_logger::builder()
         .parse_filters(&cfg.borrow().log)
         .init();
+}
+
+async fn async_main() -> Result<(), AnyError> {
+    dbus::server::spawn().await?;
+    std::future::pending::<()>().await;
+    Ok(())
 }
