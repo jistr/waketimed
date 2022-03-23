@@ -50,7 +50,7 @@ lint-clippy:
 fix: fix-clippy fix-fmt
 
 fix-clippy:
-	cargo clippy --fix --allow-dirty
+	cargo clippy --fix --allow-dirty --allow-staged
 
 fix-fmt:
 	cargo fmt
