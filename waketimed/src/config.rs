@@ -4,7 +4,7 @@ use serde_derive::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::env;
 use std::fs::File;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 static mut CONFIG: Option<Rc<RefCell<Config>>> = None;
@@ -44,6 +44,46 @@ pub struct Config {
     // `stayup_cleared_awake_time` setting.
     #[serde(default = "default_sleep_approaching_signal_intervals")]
     pub sleep_approaching_signal_intervals: Vec<u32>,
+    // Directory writable for the daemon, where its state is stored.
+    // Contains custom rules definitions, enabled status of any rules
+    // (custom or builtin), and tracking of fulfillment of individual
+    // rules. This is also the working directory of the daemon.
+    #[serde(default = "default_state_dir")]
+    pub state_dir: String,
+    // Directory with files distributed and upgraded together with the
+    // waketimed binary. Contains built-in rule definitions.
+    #[serde(default = "default_dist_dir")]
+    pub dist_dir: String,
+}
+
+impl Config {
+    pub fn state_dir(&self) -> PathBuf {
+        PathBuf::from(&self.state_dir)
+    }
+
+    pub fn rules_enabled_dir(&self) -> PathBuf {
+        let mut path = PathBuf::from(&self.state_dir);
+        path.push("rules_enabled");
+        path
+    }
+
+    pub fn editable_rules_def_dir(&self) -> PathBuf {
+        let mut path = PathBuf::from(&self.state_dir);
+        path.push("rules_def");
+        path
+    }
+
+    pub fn rules_state_dir(&self) -> PathBuf {
+        let mut path = PathBuf::from(&self.state_dir);
+        path.push("rules_state");
+        path
+    }
+
+    pub fn dist_rules_def_dir(&self) -> PathBuf {
+        let mut path = PathBuf::from(&self.dist_dir);
+        path.push("rules_def");
+        path
+    }
 }
 
 pub fn load() -> Result<(), AnyError> {
@@ -116,6 +156,12 @@ fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
         }
         cfg.sleep_approaching_signal_intervals = intervals;
     }
+    if let Ok(value) = env::var("WAKETIMED_STATE_DIR") {
+        cfg.state_dir = value;
+    }
+    if let Ok(value) = env::var("WAKETIMED_DIST_DIR") {
+        cfg.dist_dir = value;
+    }
     Ok(())
 }
 
@@ -148,4 +194,12 @@ fn default_stayup_rule_check_period() -> u32 {
 
 fn default_sleep_approaching_signal_intervals() -> Vec<u32> {
     vec![10, 5, 4, 3, 2, 1]
+}
+
+fn default_state_dir() -> String {
+    "/var/lib/waketimed".to_string()
+}
+
+fn default_dist_dir() -> String {
+    "/usr/lib/waketimed".to_string()
 }
