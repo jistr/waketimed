@@ -9,7 +9,7 @@ pub struct Server {}
 #[dbus_interface(name = "org.waketimed.waketimed1")]
 impl Server {
     #[dbus_interface(out_args("earliest_sleep_time", "stayup_active"))]
-    fn get_sleep_time(&self) -> fdo::Result<(u64, bool)> {
+    fn get_status(&self) -> fdo::Result<(u64, bool)> {
         Ok((0, false))
     }
 }
