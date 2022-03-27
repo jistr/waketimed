@@ -1,4 +1,4 @@
-use super::rule_params::param_string_required;
+use super::rule_params::param_required;
 use crate::{RuleError, Value};
 use std::collections::HashMap;
 
@@ -10,7 +10,7 @@ pub struct StayupBuiltinDef {
 impl StayupBuiltinDef {
     pub fn from_params(params: &HashMap<String, Value>) -> Result<Self, RuleError> {
         Ok(Self {
-            builtin_name: param_string_required(params, "builtin_name")?,
+            builtin_name: param_required(params, "builtin_name")?,
         })
     }
 

@@ -1,10 +1,10 @@
 use crate::{RuleError, Value};
 use std::collections::HashMap;
 
-pub fn param_string_required(
-    params: &HashMap<String, Value>,
-    key: &str,
-) -> Result<String, RuleError> {
+pub fn param_required<T>(params: &HashMap<String, Value>, key: &str) -> Result<T, RuleError>
+where
+    T: TryFrom<Value, Error = zvariant::Error>,
+{
     params
         .get(key)
         .cloned()
@@ -28,12 +28,12 @@ mod tests {
     }
 
     #[test]
-    fn test_param_string_required() -> Result<(), RuleError> {
+    fn test_param_required() -> Result<(), RuleError> {
         let params = create_params();
-        assert_eq!("a val", &(param_string_required(&params, "a key")?));
-        assert_eq!("b val", &(param_string_required(&params, "b key")?));
+        assert_eq!("a val", &(param_required::<String>(&params, "a key")?));
+        assert_eq!("b val", &(param_required::<String>(&params, "b key")?));
 
-        let res = param_string_required(&params, "c key");
+        let res = param_required::<String>(&params, "c key");
         assert!(res.is_err());
         let err = res.unwrap_err();
         assert!(err.to_string().contains("c key"));
