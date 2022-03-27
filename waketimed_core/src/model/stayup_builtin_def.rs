@@ -1,5 +1,5 @@
-use super::rule_params::clone_param_required;
-use crate::RuleError;
+use super::rule_params::param_string_required;
+use crate::{RuleError, Value};
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -8,15 +8,15 @@ pub struct StayupBuiltinDef {
 }
 
 impl StayupBuiltinDef {
-    pub fn from_params(params: &HashMap<String, String>) -> Result<Self, RuleError> {
+    pub fn from_params(params: &HashMap<String, Value>) -> Result<Self, RuleError> {
         Ok(Self {
-            builtin_name: clone_param_required(params, "builtin_name")?,
+            builtin_name: param_string_required(params, "builtin_name")?,
         })
     }
 
-    pub fn to_params(&self) -> HashMap<String, String> {
+    pub fn to_params(&self) -> HashMap<String, Value> {
         let mut params = HashMap::new();
-        params.insert("builtin_name".to_string(), self.builtin_name.clone());
+        params.insert("builtin_name".to_string(), self.builtin_name.clone().into());
         params
     }
 }
@@ -31,9 +31,9 @@ mod tests {
         }
     }
 
-    fn stayup_builtin_params() -> HashMap<String, String> {
+    fn stayup_builtin_params() -> HashMap<String, Value> {
         let mut params = HashMap::new();
-        params.insert("builtin_name".to_string(), "stayup_test".to_string());
+        params.insert("builtin_name".to_string(), "stayup_test".into());
         params
     }
 

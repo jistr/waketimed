@@ -1,5 +1,5 @@
 use super::StayupBuiltinDef;
-use crate::RuleError;
+use crate::{RuleError, Value};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 use zvariant::Type;
@@ -34,11 +34,12 @@ fn type_def_from_raw(raw_def: &RawRuleDef) -> Result<RuleTypeDef, RuleError> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Type, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Type, PartialEq)]
+#[serde(bound(deserialize = "'de: 'static"))]
 pub struct RawRuleDef {
     pub name: String,
     pub rule_type: RawRuleType,
-    pub params: HashMap<String, String>,
+    pub params: HashMap<String, Value>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Type, PartialEq, Eq)]
@@ -64,8 +65,8 @@ mod tests {
     use super::*;
 
     fn raw_rule_def() -> RawRuleDef {
-        let mut params = HashMap::new();
-        params.insert("builtin_name".to_string(), "stayup_test".to_string());
+        let mut params: HashMap<String, Value> = HashMap::new();
+        params.insert("builtin_name".to_string(), "stayup_test".into());
         RawRuleDef {
             name: "org.waketimed.stayup_test".to_string(),
             rule_type: RawRuleType::StayupBuiltin,
