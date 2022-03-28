@@ -7,3 +7,15 @@ pub enum RuleError {
     #[error("Rule parameter '{0}' is of incorrect data type.")]
     IncorrectParamType(String, #[source] zvariant::Error),
 }
+
+#[derive(Error, Debug)]
+pub enum RuleNameError {
+    #[error("Rule name cannot be empty.")]
+    Empty,
+    #[error("Rule name '{0}' is too long. Maximum length is {1} characters.")]
+    TooLong(String, usize),
+    #[error("Rule name '{0}' contains disallowed charecters. Allowed are ASCII alphanumerics, underscore, and period.)")]
+    DisallowedCharacters(String),
+    #[error("Rule name '{0}' follows an incorrect pattern. It must not start or end with a period or contain consecutive periods.")]
+    IncorrectPattern(String),
+}
