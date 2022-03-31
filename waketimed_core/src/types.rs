@@ -8,6 +8,7 @@ const RULE_NAME_PATTERN_REGEX: &str = r"(?-u)^[a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)+$
 
 pub type Value = zvariant::Value<'static>;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RuleName(String);
 
 impl TryFrom<String> for RuleName {

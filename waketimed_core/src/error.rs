@@ -6,6 +6,8 @@ pub enum RuleError {
     ParamMissing(String),
     #[error("Rule parameter '{0}' is of incorrect data type.")]
     IncorrectParamType(String, #[source] zvariant::Error),
+    #[error("Incorrect rule name.")]
+    IncorrectName(#[source] RuleNameError),
 }
 
 #[derive(Error, Debug)]
@@ -18,4 +20,10 @@ pub enum RuleNameError {
     DisallowedCharacters(String),
     #[error("Rule name '{0}' follows an incorrect pattern. It must not start or end with a period or contain consecutive periods.")]
     IncorrectPattern(String),
+}
+
+impl From<RuleNameError> for RuleError {
+    fn from(e: RuleNameError) -> Self {
+        Self::IncorrectName(e)
+    }
 }

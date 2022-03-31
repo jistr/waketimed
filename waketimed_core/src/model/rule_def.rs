@@ -1,12 +1,12 @@
 use super::StayupBuiltinDef;
-use crate::{RuleError, Value};
+use crate::{RuleError, RuleName, Value};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 use zvariant::Type;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct RuleDef {
-    pub name: String,
+    pub name: RuleName,
     pub type_def: RuleTypeDef,
 }
 
@@ -20,7 +20,7 @@ impl TryFrom<&RawRuleDef> for RuleDef {
 
     fn try_from(raw_def: &RawRuleDef) -> Result<Self, Self::Error> {
         Ok(RuleDef {
-            name: raw_def.name.clone(),
+            name: raw_def.name.clone().try_into()?,
             type_def: type_def_from_raw(raw_def)?,
         })
     }
@@ -53,7 +53,7 @@ impl From<&RuleDef> for RawRuleDef {
             RuleTypeDef::StayupBuiltin(def) => (RawRuleType::StayupBuiltin, def.to_params()),
         };
         RawRuleDef {
-            name: rule_def.name.clone(),
+            name: rule_def.name.clone().into(),
             rule_type,
             params,
         }
@@ -79,7 +79,7 @@ mod tests {
             builtin_name: "stayup_test".to_string(),
         };
         RuleDef {
-            name: "org.waketimed.stayup_test".to_string(),
+            name: "org.waketimed.stayup_test".to_string().try_into().unwrap(),
             type_def: RuleTypeDef::StayupBuiltin(sb_def),
         }
     }
