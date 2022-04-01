@@ -61,12 +61,6 @@ impl Config {
         PathBuf::from(&self.state_dir)
     }
 
-    pub fn rules_enabled_dir(&self) -> PathBuf {
-        let mut path = PathBuf::from(&self.state_dir);
-        path.push("rules_enabled");
-        path
-    }
-
     pub fn editable_rules_def_dir(&self) -> PathBuf {
         let mut path = PathBuf::from(&self.state_dir);
         path.push("rules_def");
