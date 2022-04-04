@@ -1,11 +1,14 @@
+#[derive(Debug, PartialEq, Eq)]
 pub enum DbusMsg {
-    Placeholder,
+    Terminate,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum EngineMsg {
-    Placeholder,
+    Terminate,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum WorkerMsg {
     Placeholder,
 }

@@ -1,8 +1,11 @@
 use crate::messages::{DbusMsg, EngineMsg};
 use anyhow::{Context, Error as AnyError};
+use log::trace;
 use std::env;
 use std::str::FromStr;
+use std::sync::Arc;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::Notify;
 use zbus::{dbus_interface, fdo, Connection, ConnectionBuilder};
 
 pub struct Server {
@@ -10,7 +13,13 @@ pub struct Server {
 }
 
 impl Server {
-    pub async fn handle_msg(&mut self, _msg: DbusMsg) {}
+    pub async fn handle_msg(&mut self, msg: DbusMsg) {
+        match msg {
+            DbusMsg::Terminate => self.handle_terminate(),
+        }
+    }
+
+    fn handle_terminate(&mut self) {}
 }
 
 #[dbus_interface(name = "org.waketimed.waketimed1")]
@@ -47,6 +56,7 @@ pub async fn spawn_dbus_server_and_get_conn(
 pub async fn spawn_recv_loop(
     conn: Connection,
     mut dbus_recv: UnboundedReceiver<DbusMsg>,
+    terminate_notify: Arc<Notify>,
 ) -> Result<(), AnyError> {
     tokio::spawn(async move {
         while let Some(msg) = dbus_recv.recv().await {
@@ -58,8 +68,14 @@ pub async fn spawn_recv_loop(
                     "Unable to lookup dbus::server::Server instance to process internal messages",
                 );
             let mut srv = srv_ref.get_mut().await;
+            let terminate = msg == DbusMsg::Terminate;
             srv.handle_msg(msg).await;
+            if terminate {
+                terminate_notify.notify_one();
+                break;
+            }
         }
+        trace!("Exiting D-Bus thread receiver loop.")
     });
     Ok(())
 }
