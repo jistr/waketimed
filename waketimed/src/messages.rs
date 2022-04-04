@@ -2,7 +2,7 @@ pub enum DbusMsg {
     Placeholder,
 }
 
-pub enum MainMsg {
+pub enum EngineMsg {
     Placeholder,
 }
 

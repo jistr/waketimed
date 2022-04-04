@@ -1,4 +1,4 @@
-use crate::messages::{DbusMsg, MainMsg};
+use crate::messages::{DbusMsg, EngineMsg};
 use anyhow::{Context, Error as AnyError};
 use std::env;
 use std::str::FromStr;
@@ -6,7 +6,7 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use zbus::{dbus_interface, fdo, Connection, ConnectionBuilder};
 
 pub struct Server {
-    _main_send: UnboundedSender<MainMsg>,
+    _main_send: UnboundedSender<EngineMsg>,
 }
 
 impl Server {
@@ -22,7 +22,7 @@ impl Server {
 }
 
 pub async fn spawn_dbus_server_and_get_conn(
-    main_send: UnboundedSender<MainMsg>,
+    main_send: UnboundedSender<EngineMsg>,
 ) -> Result<Connection, AnyError> {
     let dbus_server = Server {
         _main_send: main_send,
