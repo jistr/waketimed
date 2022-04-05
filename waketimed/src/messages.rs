@@ -10,5 +10,5 @@ pub enum EngineMsg {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum WorkerMsg {
-    Placeholder,
+    Terminate,
 }

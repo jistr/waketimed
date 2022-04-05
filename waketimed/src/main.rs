@@ -4,6 +4,7 @@ mod config;
 mod dbus;
 mod engine;
 pub mod messages;
+mod worker;
 
 use anyhow::Error as AnyError;
 use engine::Engine;
@@ -18,6 +19,8 @@ use tokio::sync::Notify;
 
 pub use crate::config::get_config;
 
+const WORKER_THREADS: usize = 3;
+
 fn main() -> Result<(), AnyError> {
     config::load()?;
     setup_logger();
@@ -25,8 +28,9 @@ fn main() -> Result<(), AnyError> {
 
     let (dbus_send, dbus_recv) = unbounded_channel::<DbusMsg>();
     let (main_send, main_recv) = unbounded_channel::<EngineMsg>();
-    let (worker_send, _worker_recv) = unbounded_channel::<WorkerMsg>();
+    let (worker_send, worker_recv) = unbounded_channel::<WorkerMsg>();
 
+    let worker_thread = worker_thread_spawn(worker_recv, main_send.clone());
     let dbus_thread = dbus_thread_spawn(dbus_recv, main_send.clone());
     let signal_thread = signal_thread_spawn(main_send)?;
     main_thread_main(main_recv, dbus_send, worker_send);
@@ -34,6 +38,10 @@ fn main() -> Result<(), AnyError> {
     signal_thread.join().expect("Failed to join signal thread.");
     trace!("Joining D-Bus thread.");
     dbus_thread.join().expect("Failed to join D-Bus thread.")?;
+    trace!("Joining worker thread.");
+    worker_thread
+        .join()
+        .expect("Failed to join worker thread.")?;
     trace!("Terminating main thread.");
     Ok(())
 }
@@ -69,6 +77,7 @@ fn dbus_thread_spawn(
         .name("dbus".to_string())
         .spawn(move || {
             let runtime = tokio::runtime::Builder::new_current_thread()
+                // TODO do we need both?
                 .enable_io()
                 .enable_time()
                 .build()?;
@@ -86,6 +95,32 @@ async fn dbus_thread_main(
     dbus::server::spawn_recv_loop(conn, dbus_recv, terminate_notify.clone()).await?;
     terminate_notify.notified().await;
     trace!("Terminating D-Bus thread.");
+    Ok(())
+}
+
+fn worker_thread_spawn(
+    worker_recv: UnboundedReceiver<WorkerMsg>,
+    main_send: UnboundedSender<EngineMsg>,
+) -> JoinHandle<Result<(), AnyError>> {
+    thread::Builder::new()
+        .name("worker".to_string())
+        .spawn(move || {
+            let runtime = tokio::runtime::Builder::new_multi_thread()
+                .worker_threads(WORKER_THREADS)
+                .enable_io()
+                .enable_time()
+                .build()?;
+            runtime.block_on(worker_thread_main(worker_recv, main_send))
+        })
+        .expect("Failed to spawn worker thread.")
+}
+
+async fn worker_thread_main(
+    worker_recv: UnboundedReceiver<WorkerMsg>,
+    main_send: UnboundedSender<EngineMsg>,
+) -> Result<(), AnyError> {
+    worker::run_recv_loop(worker_recv, main_send).await?;
+    trace!("Terminating worker thread.");
     Ok(())
 }
 
