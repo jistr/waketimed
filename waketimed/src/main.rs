@@ -76,11 +76,7 @@ fn dbus_thread_spawn(
     thread::Builder::new()
         .name("dbus".to_string())
         .spawn(move || {
-            let runtime = tokio::runtime::Builder::new_current_thread()
-                // TODO do we need both?
-                .enable_io()
-                .enable_time()
-                .build()?;
+            let runtime = tokio::runtime::Builder::new_current_thread().build()?;
             runtime.block_on(dbus_thread_main(dbus_recv, main_send))
         })
         .expect("Failed to spawn D-Bus thread.")
