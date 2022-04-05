@@ -27,13 +27,13 @@ fn main() -> Result<(), AnyError> {
     config::log_config()?;
 
     let (dbus_send, dbus_recv) = unbounded_channel::<DbusMsg>();
-    let (main_send, main_recv) = unbounded_channel::<EngineMsg>();
+    let (engine_send, engine_recv) = unbounded_channel::<EngineMsg>();
     let (worker_send, worker_recv) = unbounded_channel::<WorkerMsg>();
 
-    let worker_thread = worker_thread_spawn(worker_recv, main_send.clone());
-    let dbus_thread = dbus_thread_spawn(dbus_recv, main_send.clone());
-    let signal_thread = signal_thread_spawn(main_send)?;
-    main_thread_main(main_recv, dbus_send, worker_send);
+    let worker_thread = worker_thread_spawn(worker_recv, engine_send.clone());
+    let dbus_thread = dbus_thread_spawn(dbus_recv, engine_send.clone());
+    let signal_thread = signal_thread_spawn(engine_send)?;
+    main_thread_main(engine_recv, dbus_send, worker_send);
     trace!("Joining signal thread.");
     signal_thread.join().expect("Failed to join signal thread.");
     trace!("Joining D-Bus thread.");
@@ -54,12 +54,12 @@ fn setup_logger() {
 }
 
 fn main_thread_main(
-    mut main_recv: UnboundedReceiver<EngineMsg>,
+    mut engine_recv: UnboundedReceiver<EngineMsg>,
     dbus_send: UnboundedSender<DbusMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
 ) {
     let mut engine = Engine::new(dbus_send, worker_send);
-    while let Some(msg) = main_recv.blocking_recv() {
+    while let Some(msg) = engine_recv.blocking_recv() {
         let terminate = msg == EngineMsg::Terminate;
         engine.handle_msg(msg);
         if terminate {
@@ -71,23 +71,23 @@ fn main_thread_main(
 
 fn dbus_thread_spawn(
     dbus_recv: UnboundedReceiver<DbusMsg>,
-    main_send: UnboundedSender<EngineMsg>,
+    engine_send: UnboundedSender<EngineMsg>,
 ) -> JoinHandle<Result<(), AnyError>> {
     thread::Builder::new()
         .name("dbus".to_string())
         .spawn(move || {
             let runtime = tokio::runtime::Builder::new_current_thread().build()?;
-            runtime.block_on(dbus_thread_main(dbus_recv, main_send))
+            runtime.block_on(dbus_thread_main(dbus_recv, engine_send))
         })
         .expect("Failed to spawn D-Bus thread.")
 }
 
 async fn dbus_thread_main(
     dbus_recv: UnboundedReceiver<DbusMsg>,
-    main_send: UnboundedSender<EngineMsg>,
+    engine_send: UnboundedSender<EngineMsg>,
 ) -> Result<(), AnyError> {
     let terminate_notify = Arc::new(Notify::new());
-    let conn = dbus::server::spawn_dbus_server_and_get_conn(main_send).await?;
+    let conn = dbus::server::spawn_dbus_server_and_get_conn(engine_send).await?;
     dbus::server::spawn_recv_loop(conn, dbus_recv, terminate_notify.clone()).await?;
     terminate_notify.notified().await;
     trace!("Terminating D-Bus thread.");
@@ -96,7 +96,7 @@ async fn dbus_thread_main(
 
 fn worker_thread_spawn(
     worker_recv: UnboundedReceiver<WorkerMsg>,
-    main_send: UnboundedSender<EngineMsg>,
+    engine_send: UnboundedSender<EngineMsg>,
 ) -> JoinHandle<Result<(), AnyError>> {
     thread::Builder::new()
         .name("worker".to_string())
@@ -106,21 +106,23 @@ fn worker_thread_spawn(
                 .enable_io()
                 .enable_time()
                 .build()?;
-            runtime.block_on(worker_thread_main(worker_recv, main_send))
+            runtime.block_on(worker_thread_main(worker_recv, engine_send))
         })
         .expect("Failed to spawn worker thread.")
 }
 
 async fn worker_thread_main(
     worker_recv: UnboundedReceiver<WorkerMsg>,
-    main_send: UnboundedSender<EngineMsg>,
+    engine_send: UnboundedSender<EngineMsg>,
 ) -> Result<(), AnyError> {
-    worker::run_recv_loop(worker_recv, main_send).await?;
+    worker::run_recv_loop(worker_recv, engine_send).await?;
     trace!("Terminating worker thread.");
     Ok(())
 }
 
-fn signal_thread_spawn(main_send: UnboundedSender<EngineMsg>) -> Result<JoinHandle<()>, AnyError> {
+fn signal_thread_spawn(
+    engine_send: UnboundedSender<EngineMsg>,
+) -> Result<JoinHandle<()>, AnyError> {
     let mut signals = Signals::new(&[SIGINT, SIGTERM])?;
     Ok(thread::Builder::new()
         .name("signal".to_string())
@@ -129,7 +131,7 @@ fn signal_thread_spawn(main_send: UnboundedSender<EngineMsg>) -> Result<JoinHand
             for signal in &mut signals {
                 match signal {
                     SIGINT | SIGTERM => {
-                        main_send.send(EngineMsg::Terminate).unwrap_or_else(|e| {
+                        engine_send.send(EngineMsg::Terminate).unwrap_or_else(|e| {
                             error!("Could not send message from signal thread: {}", e)
                         });
                         handle.close();

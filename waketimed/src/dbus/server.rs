@@ -9,7 +9,7 @@ use tokio::sync::Notify;
 use zbus::{dbus_interface, fdo, Connection, ConnectionBuilder};
 
 pub struct Server {
-    _main_send: UnboundedSender<EngineMsg>,
+    _engine_send: UnboundedSender<EngineMsg>,
 }
 
 impl Server {
@@ -31,10 +31,10 @@ impl Server {
 }
 
 pub async fn spawn_dbus_server_and_get_conn(
-    main_send: UnboundedSender<EngineMsg>,
+    engine_send: UnboundedSender<EngineMsg>,
 ) -> Result<Connection, AnyError> {
     let dbus_server = Server {
-        _main_send: main_send,
+        _engine_send: engine_send,
     };
     let builder = if let Ok(address) = env::var("WAKETIMED_BUS_ADDRESS") {
         ConnectionBuilder::address(

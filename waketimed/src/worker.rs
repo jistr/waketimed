@@ -5,7 +5,7 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 pub struct Worker {
     #[allow(dead_code)]
-    main_send: UnboundedSender<EngineMsg>,
+    engine_send: UnboundedSender<EngineMsg>,
 }
 
 impl Worker {
@@ -14,9 +14,9 @@ impl Worker {
 
 pub async fn run_recv_loop(
     mut worker_recv: UnboundedReceiver<WorkerMsg>,
-    main_send: UnboundedSender<EngineMsg>,
+    engine_send: UnboundedSender<EngineMsg>,
 ) -> Result<(), AnyError> {
-    let mut worker = Worker { main_send };
+    let mut worker = Worker { engine_send };
     while let Some(msg) = worker_recv.recv().await {
         let terminate = msg == WorkerMsg::Terminate;
         worker.handle_msg(msg).await;
