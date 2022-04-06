@@ -59,6 +59,7 @@ pub async fn spawn_recv_loop(
     terminate_notify: Arc<Notify>,
 ) -> Result<(), AnyError> {
     tokio::spawn(async move {
+        trace!("Starting D-Bus thread receiver loop.");
         while let Some(msg) = dbus_recv.recv().await {
             let srv_ref = conn
                 .object_server()

@@ -76,7 +76,10 @@ fn dbus_thread_spawn(
     thread::Builder::new()
         .name("dbus".to_string())
         .spawn(move || {
-            let runtime = tokio::runtime::Builder::new_current_thread().build()?;
+            let runtime = tokio::runtime::Builder::new_current_thread()
+                .enable_io()
+                .enable_time()
+                .build()?;
             runtime.block_on(dbus_thread_main(dbus_recv, engine_send))
         })
         .expect("Failed to spawn D-Bus thread.")
@@ -86,6 +89,7 @@ async fn dbus_thread_main(
     dbus_recv: UnboundedReceiver<DbusMsg>,
     engine_send: UnboundedSender<EngineMsg>,
 ) -> Result<(), AnyError> {
+    trace!("Starting D-Bus thread.");
     let terminate_notify = Arc::new(Notify::new());
     let conn = dbus::server::spawn_dbus_server_and_get_conn(engine_send).await?;
     dbus::server::spawn_recv_loop(conn, dbus_recv, terminate_notify.clone()).await?;
@@ -103,8 +107,6 @@ fn worker_thread_spawn(
         .spawn(move || {
             let runtime = tokio::runtime::Builder::new_multi_thread()
                 .worker_threads(WORKER_THREADS)
-                .enable_io()
-                .enable_time()
                 .build()?;
             runtime.block_on(worker_thread_main(worker_recv, engine_send))
         })
@@ -115,6 +117,7 @@ async fn worker_thread_main(
     worker_recv: UnboundedReceiver<WorkerMsg>,
     engine_send: UnboundedSender<EngineMsg>,
 ) -> Result<(), AnyError> {
+    trace!("Starting worker thread.");
     worker::run_recv_loop(worker_recv, engine_send).await?;
     trace!("Terminating worker thread.");
     Ok(())
@@ -127,6 +130,7 @@ fn signal_thread_spawn(
     Ok(thread::Builder::new()
         .name("signal".to_string())
         .spawn(move || {
+            trace!("Starting signal thread.");
             let handle = signals.handle();
             for signal in &mut signals {
                 match signal {

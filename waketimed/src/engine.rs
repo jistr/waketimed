@@ -3,7 +3,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 pub struct Engine {
     dbus_send: UnboundedSender<DbusMsg>,
-    _worker_send: UnboundedSender<WorkerMsg>,
+    worker_send: UnboundedSender<WorkerMsg>,
 }
 
 impl Engine {
@@ -13,7 +13,7 @@ impl Engine {
     ) -> Self {
         Self {
             dbus_send,
-            _worker_send: worker_send,
+            worker_send,
         }
     }
 
@@ -27,5 +27,8 @@ impl Engine {
         self.dbus_send
             .send(DbusMsg::Terminate)
             .expect("Failed to send DbusMsg::Terminate");
+        self.worker_send
+            .send(WorkerMsg::Terminate)
+            .expect("Failed to send WorkerMsg::Terminate");
     }
 }
