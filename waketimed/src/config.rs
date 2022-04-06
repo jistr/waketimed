@@ -16,6 +16,22 @@ pub struct Config {
     // Log level.
     #[serde(default = "default_log")]
     pub log: String,
+    // Directory writable for the daemon, where its state is stored.
+    // Contains custom rules definitions, enabled status of any rules
+    // (custom or builtin), and tracking of fulfillment of individual
+    // rules. This is also the working directory of the daemon.
+    #[serde(default = "default_state_dir")]
+    pub state_dir: String,
+    // Directory with files distributed and upgraded together with the
+    // waketimed binary. Contains built-in rule definitions.
+    #[serde(default = "default_dist_dir")]
+    pub dist_dir: String,
+    // Time between re-checking poll-based variables, in seconds.
+    // Larger values mean less exact times of updating variables (less
+    // exact times of falling asleep), but consume less CPU.
+    #[serde(default = "default_variable_poll_period")]
+    pub variable_poll_period: u32,
+
     // Time to stay up (prevent sleep) after waketimed starts, in
     // seconds. Results in automatic creation of a "stay up until"
     // rule. Should waketimed get misconfigured and put the device to
@@ -32,11 +48,6 @@ pub struct Config {
     // without sending out any "sleep approaching" signals.
     #[serde(default = "default_stayup_cleared_awake_time")]
     pub stayup_cleared_awake_time: u32,
-    // Time between re-checking stayup conditions, in seconds. Larger
-    // values mean less exact times of falling asleep, but consume
-    // less CPU.
-    #[serde(default = "default_stayup_rule_check_period")]
-    pub stayup_rule_check_period: u32,
     // Time intervals, in seconds before expected time of going into
     // sleep, to announce the approaching sleep via a D-Bus signal.
     // Only signal intervals that are still relevant at the time when
@@ -44,16 +55,6 @@ pub struct Config {
     // `stayup_cleared_awake_time` setting.
     #[serde(default = "default_sleep_approaching_signal_intervals")]
     pub sleep_approaching_signal_intervals: Vec<u32>,
-    // Directory writable for the daemon, where its state is stored.
-    // Contains custom rules definitions, enabled status of any rules
-    // (custom or builtin), and tracking of fulfillment of individual
-    // rules. This is also the working directory of the daemon.
-    #[serde(default = "default_state_dir")]
-    pub state_dir: String,
-    // Directory with files distributed and upgraded together with the
-    // waketimed binary. Contains built-in rule definitions.
-    #[serde(default = "default_dist_dir")]
-    pub dist_dir: String,
 }
 
 impl Config {
@@ -139,8 +140,8 @@ fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
     if let Ok(value) = env::var("WAKETIMED_STAYUP_CLEARED_AWAKE_TIME") {
         cfg.stayup_cleared_awake_time = value.parse::<u32>()?;
     }
-    if let Ok(value) = env::var("WAKETIMED_STAYUP_RULE_CHECK_PERIOD") {
-        cfg.stayup_rule_check_period = value.parse::<u32>()?;
+    if let Ok(value) = env::var("WAKETIMED_VARIABLE_POLL_PERIOD") {
+        cfg.variable_poll_period = value.parse::<u32>()?;
     }
     if let Ok(value) = env::var("WAKETIMED_SLEEP_APPROACHING_SIGNAL_INTERVALS") {
         let mut intervals: Vec<u32> = vec![];
@@ -182,7 +183,7 @@ fn default_stayup_cleared_awake_time() -> u32 {
     10
 }
 
-fn default_stayup_rule_check_period() -> u32 {
+fn default_variable_poll_period() -> u32 {
     3
 }
 
