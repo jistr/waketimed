@@ -1,7 +1,8 @@
 mod rule_def;
-mod stayup_builtin_def;
+mod var_def;
 
 pub mod rule_params;
+pub mod var_params;
 
 pub use rule_def::{RawRuleDef, RawRuleType, RuleDef, RuleTypeDef};
-pub use stayup_builtin_def::StayupBuiltinDef;
+pub use var_def::{RawVarDef, RawVarKind, VarDataType, VarDef, VarKind};

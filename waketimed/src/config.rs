@@ -62,9 +62,15 @@ impl Config {
         PathBuf::from(&self.state_dir)
     }
 
-    pub fn editable_rules_def_dir(&self) -> PathBuf {
+    pub fn local_rules_def_dir(&self) -> PathBuf {
         let mut path = PathBuf::from(&self.state_dir);
         path.push("rules_def");
+        path
+    }
+
+    pub fn local_vars_def_dir(&self) -> PathBuf {
+        let mut path = PathBuf::from(&self.state_dir);
+        path.push("vars_def");
         path
     }
 
@@ -77,6 +83,12 @@ impl Config {
     pub fn dist_rules_def_dir(&self) -> PathBuf {
         let mut path = PathBuf::from(&self.dist_dir);
         path.push("rules_def");
+        path
+    }
+
+    pub fn dist_vars_def_dir(&self) -> PathBuf {
+        let mut path = PathBuf::from(&self.dist_dir);
+        path.push("vars_def");
         path
     }
 }

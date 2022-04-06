@@ -1,4 +1,3 @@
-use super::StayupBuiltinDef;
 use crate::{RuleError, RuleName, Value};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -12,7 +11,8 @@ pub struct RuleDef {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum RuleTypeDef {
-    StayupBuiltin(StayupBuiltinDef),
+    // NOTE: This will have some definition eventually
+    StayupBool,
 }
 
 impl TryFrom<&RawRuleDef> for RuleDef {
@@ -28,9 +28,7 @@ impl TryFrom<&RawRuleDef> for RuleDef {
 
 fn type_def_from_raw(raw_def: &RawRuleDef) -> Result<RuleTypeDef, RuleError> {
     match raw_def.rule_type {
-        RawRuleType::StayupBuiltin => Ok(RuleTypeDef::StayupBuiltin(
-            StayupBuiltinDef::from_params(&raw_def.params)?,
-        )),
+        RawRuleType::StayupBool => Ok(RuleTypeDef::StayupBool),
     }
 }
 
@@ -44,13 +42,13 @@ pub struct RawRuleDef {
 
 #[derive(Debug, Serialize, Deserialize, Type, PartialEq, Eq)]
 pub enum RawRuleType {
-    StayupBuiltin,
+    StayupBool,
 }
 
 impl From<&RuleDef> for RawRuleDef {
     fn from(rule_def: &RuleDef) -> Self {
         let (rule_type, params) = match &rule_def.type_def {
-            RuleTypeDef::StayupBuiltin(def) => (RawRuleType::StayupBuiltin, def.to_params()),
+            RuleTypeDef::StayupBool => (RawRuleType::StayupBool, HashMap::new()),
         };
         RawRuleDef {
             name: rule_def.name.clone().into(),
@@ -65,22 +63,18 @@ mod tests {
     use super::*;
 
     fn raw_rule_def() -> RawRuleDef {
-        let mut params: HashMap<String, Value> = HashMap::new();
-        params.insert("builtin_name".to_string(), "stayup_test".into());
+        let params: HashMap<String, Value> = HashMap::new();
         RawRuleDef {
             name: "org.waketimed.stayup_test".to_string(),
-            rule_type: RawRuleType::StayupBuiltin,
+            rule_type: RawRuleType::StayupBool,
             params,
         }
     }
 
     fn rule_def() -> RuleDef {
-        let sb_def = StayupBuiltinDef {
-            builtin_name: "stayup_test".to_string(),
-        };
         RuleDef {
             name: "org.waketimed.stayup_test".to_string().try_into().unwrap(),
-            type_def: RuleTypeDef::StayupBuiltin(sb_def),
+            type_def: RuleTypeDef::StayupBool,
         }
     }
 

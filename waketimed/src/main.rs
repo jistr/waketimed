@@ -3,6 +3,7 @@ extern crate waketimed_core as wd_core;
 mod config;
 mod dbus;
 mod engine;
+pub mod files;
 pub mod messages;
 mod worker;
 
