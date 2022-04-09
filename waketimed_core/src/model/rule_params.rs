@@ -1,9 +1,10 @@
-use crate::{RuleError, Value};
+use crate::RuleError;
 use std::collections::HashMap;
+use zvariant::OwnedValue;
 
-pub fn param_required<T>(params: &HashMap<String, Value>, key: &str) -> Result<T, RuleError>
+pub fn param_required<T>(params: &HashMap<String, OwnedValue>, key: &str) -> Result<T, RuleError>
 where
-    T: TryFrom<Value, Error = zvariant::Error>,
+    T: TryFrom<OwnedValue, Error = zvariant::Error>,
 {
     params
         .get(key)
@@ -19,11 +20,12 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use zvariant::Value;
 
-    fn create_params() -> HashMap<String, Value> {
+    fn create_params() -> HashMap<String, OwnedValue> {
         let mut params = HashMap::new();
-        params.insert("a key".into(), "a val".into());
-        params.insert("b key".into(), "b val".into());
+        params.insert("a key".into(), Value::from("a val").into());
+        params.insert("b key".into(), Value::from("b val").into());
         params
     }
 

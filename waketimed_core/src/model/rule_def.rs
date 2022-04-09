@@ -1,7 +1,7 @@
-use crate::{RuleError, RuleName, Value};
+use crate::{RuleError, RuleName};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
-use zvariant::Type;
+use zvariant::{OwnedValue, Type};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct RuleDef {
@@ -37,7 +37,7 @@ fn type_def_from_raw(raw_def: &RawRuleDef) -> Result<RuleTypeDef, RuleError> {
 pub struct RawRuleDef {
     pub name: String,
     pub rule_type: RawRuleType,
-    pub params: HashMap<String, Value>,
+    pub params: HashMap<String, OwnedValue>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Type, PartialEq, Eq)]
@@ -63,7 +63,7 @@ mod tests {
     use super::*;
 
     fn raw_rule_def() -> RawRuleDef {
-        let params: HashMap<String, Value> = HashMap::new();
+        let params: HashMap<String, OwnedValue> = HashMap::new();
         RawRuleDef {
             name: "org.waketimed.stayup_test".to_string(),
             rule_type: RawRuleType::StayupBool,

@@ -1,8 +1,8 @@
 use super::var_params::param_required;
-use crate::{Value, VarError, VarName};
+use crate::{VarError, VarName};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
-use zvariant::Type;
+use zvariant::{OwnedValue, Type, Value};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct VarDef {
@@ -21,12 +21,13 @@ pub enum VarKind {
     BuiltinPoll(BuiltinPollDef),
 }
 
-impl TryFrom<&RawVarDef> for VarDef {
+impl TryFrom<(&str, &RawVarDef)> for VarDef {
     type Error = crate::VarError;
 
-    fn try_from(raw_def: &RawVarDef) -> Result<Self, Self::Error> {
+    fn try_from(name_and_raw_def: (&str, &RawVarDef)) -> Result<Self, Self::Error> {
+        let (name, raw_def) = name_and_raw_def;
         Ok(VarDef {
-            name: raw_def.name.clone().try_into()?,
+            name: name.to_string().try_into()?,
             data_type: raw_def.data_type.clone(),
             kind: kind_from_raw(raw_def)?,
         })
@@ -41,13 +42,11 @@ fn kind_from_raw(raw_def: &RawVarDef) -> Result<VarKind, VarError> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Type, PartialEq)]
-#[serde(bound(deserialize = "'de: 'static"))]
+#[derive(Debug, Deserialize, Serialize, Type, PartialEq)]
 pub struct RawVarDef {
-    pub name: String,
     pub data_type: VarDataType,
     pub var_kind: RawVarKind,
-    pub params: HashMap<String, Value>,
+    pub params: HashMap<String, OwnedValue>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Type, PartialEq, Eq)]
@@ -61,7 +60,6 @@ impl From<&VarDef> for RawVarDef {
             VarKind::BuiltinPoll(def) => (RawVarKind::BuiltinPoll, def.to_params()),
         };
         RawVarDef {
-            name: var_def.name.clone().into(),
             data_type: var_def.data_type.clone(),
             var_kind,
             params,
@@ -75,15 +73,18 @@ pub struct BuiltinPollDef {
 }
 
 impl BuiltinPollDef {
-    pub fn from_params(params: &HashMap<String, Value>) -> Result<Self, VarError> {
+    pub fn from_params(params: &HashMap<String, OwnedValue>) -> Result<Self, VarError> {
         Ok(Self {
             builtin_name: param_required(params, "builtin_name")?,
         })
     }
 
-    pub fn to_params(&self) -> HashMap<String, Value> {
+    pub fn to_params(&self) -> HashMap<String, OwnedValue> {
         let mut params = HashMap::new();
-        params.insert("builtin_name".to_string(), self.builtin_name.clone().into());
+        params.insert(
+            "builtin_name".to_string(),
+            Value::from(self.builtin_name.clone()).into(),
+        );
         params
     }
 }
@@ -93,10 +94,9 @@ mod tests {
     use super::*;
 
     fn raw_var_def() -> RawVarDef {
-        let mut params: HashMap<String, Value> = HashMap::new();
-        params.insert("builtin_name".to_string(), "display_on".into());
+        let mut params: HashMap<String, OwnedValue> = HashMap::new();
+        params.insert("builtin_name".to_string(), Value::from("display_on").into());
         RawVarDef {
-            name: "wtd_display_on".to_string(),
             data_type: VarDataType::Bool,
             var_kind: RawVarKind::BuiltinPoll,
             params,
@@ -117,15 +117,18 @@ mod tests {
         }
     }
 
-    fn builtin_poll_params() -> HashMap<String, Value> {
+    fn builtin_poll_params() -> HashMap<String, OwnedValue> {
         let mut params = HashMap::new();
-        params.insert("builtin_name".to_string(), "display_on".into());
+        params.insert("builtin_name".to_string(), Value::from("display_on").into());
         params
     }
 
     #[test]
     fn test_def_from_raw() -> Result<(), VarError> {
-        assert_eq!(var_def(), VarDef::try_from(&raw_var_def())?);
+        assert_eq!(
+            var_def(),
+            VarDef::try_from(("wtd_display_on", &raw_var_def()))?
+        );
         Ok(())
     }
 

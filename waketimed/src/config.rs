@@ -62,34 +62,38 @@ impl Config {
         PathBuf::from(&self.state_dir)
     }
 
-    pub fn local_rules_def_dir(&self) -> PathBuf {
+    pub fn local_rule_def_dir(&self) -> PathBuf {
         let mut path = PathBuf::from(&self.state_dir);
-        path.push("rules_def");
+        path.push("rule_def");
         path
     }
 
-    pub fn local_vars_def_dir(&self) -> PathBuf {
+    pub fn local_var_def_dir(&self) -> PathBuf {
         let mut path = PathBuf::from(&self.state_dir);
-        path.push("vars_def");
+        path.push("var_def");
         path
     }
 
-    pub fn rules_state_dir(&self) -> PathBuf {
+    pub fn rule_state_dir(&self) -> PathBuf {
         let mut path = PathBuf::from(&self.state_dir);
-        path.push("rules_state");
+        path.push("rule_state");
         path
     }
 
-    pub fn dist_rules_def_dir(&self) -> PathBuf {
+    pub fn dist_rule_def_dir(&self) -> PathBuf {
         let mut path = PathBuf::from(&self.dist_dir);
-        path.push("rules_def");
+        path.push("rule_def");
         path
     }
 
-    pub fn dist_vars_def_dir(&self) -> PathBuf {
+    pub fn dist_var_def_dir(&self) -> PathBuf {
         let mut path = PathBuf::from(&self.dist_dir);
-        path.push("vars_def");
+        path.push("var_def");
         path
+    }
+
+    pub fn var_def_dirs(&self) -> Vec<PathBuf> {
+        vec![self.dist_var_def_dir(), self.local_var_def_dir()]
     }
 }
 

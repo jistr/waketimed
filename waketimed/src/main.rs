@@ -1,4 +1,4 @@
-extern crate waketimed_core as wd_core;
+extern crate waketimed_core as wtd_core;
 
 mod config;
 mod dbus;
@@ -34,7 +34,7 @@ fn main() -> Result<(), AnyError> {
     let worker_thread = worker_thread_spawn(worker_recv, engine_send.clone());
     let dbus_thread = dbus_thread_spawn(dbus_recv, engine_send.clone());
     let signal_thread = signal_thread_spawn(engine_send)?;
-    main_thread_main(engine_recv, dbus_send, worker_send);
+    main_thread_main(engine_recv, dbus_send, worker_send)?;
     trace!("Joining signal thread.");
     signal_thread.join().expect("Failed to join signal thread.");
     trace!("Joining D-Bus thread.");
@@ -58,8 +58,9 @@ fn main_thread_main(
     mut engine_recv: UnboundedReceiver<EngineMsg>,
     dbus_send: UnboundedSender<DbusMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
-) {
+) -> Result<(), AnyError> {
     let mut engine = Engine::new(dbus_send, worker_send);
+    engine.init()?;
     while let Some(msg) = engine_recv.blocking_recv() {
         let terminate = msg == EngineMsg::Terminate;
         engine.handle_msg(msg);
@@ -67,7 +68,8 @@ fn main_thread_main(
             break;
         }
     }
-    trace!("Exiting main thread loop.")
+    trace!("Exiting main thread loop.");
+    Ok(())
 }
 
 fn dbus_thread_spawn(

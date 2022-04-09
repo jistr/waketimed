@@ -10,8 +10,6 @@ const VAR_NAME_MAX_LENGTH: usize = 40;
 const VAR_NAME_CHARSET_REGEX: &str = r"(?-u)^[a-z0-9_]+$";
 const VAR_NAME_PATTERN_REGEX: &str = r"(?-u)^[a-z0-9]+(?:_[a-z0-9]+)*$";
 
-pub type Value = zvariant::Value<'static>;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RuleName(String);
 
@@ -60,7 +58,7 @@ impl From<RuleName> for String {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct VarName(String);
 
 impl TryFrom<String> for VarName {
@@ -106,6 +104,11 @@ impl From<VarName> for String {
     fn from(var_name: VarName) -> String {
         var_name.0
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum VarValue {
+    Bool(bool),
 }
 
 #[cfg(test)]
