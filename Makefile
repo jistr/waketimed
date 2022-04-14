@@ -4,7 +4,8 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 CONTAINER_MGR ?= podman
 WAKETIMED_BUILD_PROFILE ?= --release
-
+WAKETIMED_TEST_INT_ARGS ?=
+export WAKETIMED_BUS_ADDRESS ?= $(DBUS_SESSION_BUS_ADDRESS)
 
 # BUILD
 
@@ -60,14 +61,27 @@ fix-fmt:
 
 test: test-waketimed_core test-waketimed test-waketimectl
 
-test-waketimed:
-	cd waketimed && cargo test
+test-unit: test-unit-waketimed_core test-unit-waketimed test-unit-waketimectl
 
-test-waketimed_core:
-	cd waketimed_core && cargo test
+test-int: test-int-waketimed
 
-test-waketimectl:
-	cd waketimectl && cargo test
+test-waketimed: test-unit-waketimed test-int-waketimed
+
+test-unit-waketimed:
+	cd waketimed && cargo test --bins
+
+test-int-waketimed:
+	cd waketimed && cargo test --test '*' $(WAKETIMED_TEST_INT_ARGS)
+
+test-waketimed_core: test-unit-waketimed_core
+
+test-unit-waketimed_core:
+	cd waketimed_core && cargo test --lib
+
+test-waketimectl: test-unit-waketimectl
+
+test-unit-waketimectl:
+	cd waketimectl && cargo test --bins
 
 # TOOLBOX
 

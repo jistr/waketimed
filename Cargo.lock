@@ -760,6 +760,7 @@ dependencies = [
  "anyhow",
  "env_logger",
  "log",
+ "nix",
  "serde",
  "serde_derive",
  "serde_yaml",

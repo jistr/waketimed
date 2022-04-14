@@ -37,6 +37,7 @@ pub async fn spawn_dbus_server_and_get_conn(
         _engine_send: engine_send,
     };
     let builder = if let Ok(address) = env::var("WAKETIMED_BUS_ADDRESS") {
+        trace!("Using D-Bus address: '{}'", &address);
         ConnectionBuilder::address(
             zbus::Address::from_str(&address)
                 .with_context(|| "Failed to parse WAKETIMED_BUS_ADDRESS")?,

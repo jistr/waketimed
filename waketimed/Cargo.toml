@@ -31,3 +31,6 @@ tokio = { version = "1.17.0", features = ["rt", "rt-multi-thread", "net", "sync"
 zbus = { version = "2.1.1", default-features = false, features = ["tokio"] }
 zbus_macros = "2.1.1"
 zbus_polkit = "2.0.1"
+
+[dev-dependencies]
+nix = "0.23.1"

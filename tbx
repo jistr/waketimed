@@ -56,14 +56,25 @@ if [ -z "${DESKTOP_PASS_THROUGH+x}" ]; then
         "
 fi
 
+# TODO: make use of --passwd-entry after it is released. Currently
+# Podman uses the value from -w as the home dir in /etc/passwd for the
+# main user in container (preserved via --userns=keep-id). This seems
+# wrong. We explicitly pass -e HOME=$HOME to get around this, but
+# there may be something that reads /etc/passwd rather than the env
+# var perhaps...
+# https://github.com/containers/podman/issues/13185
 $CONTAINER_MGR run \
        --name waketimed_$IDX \
        --detach-keys='ctrl-^' \
        $TOOLBOX_TTY \
+       --userns=keep-id \
+       -w "$HOME/waketimed" \
        --rm \
        --privileged \
-       -v "$PROJECT_DIR/tmp/cargo:/root/.cargo:z" \
-       -v "$PROJECT_DIR:/root/waketimed:z" \
+       --tmpfs "$HOME" \
+       -v "$PROJECT_DIR/tmp/cargo:$HOME/.cargo:z" \
+       -v "$PROJECT_DIR:$HOME/waketimed:z" \
+       -e "HOME=$HOME" \
        -e "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.cargo/bin" \
        ${DESKTOP_PASS_THROUGH} \
        ${PASS_THROUGH_VARS} \
