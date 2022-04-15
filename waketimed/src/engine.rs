@@ -1,17 +1,13 @@
-use crate::files;
 use crate::messages::{DbusMsg, EngineMsg, WorkerMsg};
+use crate::var_manager::VarManager;
 use anyhow::Error as AnyError;
-use std::collections::HashMap;
 use tokio::sync::mpsc::UnboundedSender;
-use wtd_core::model::VarDef;
-use wtd_core::VarName;
 
 pub struct Engine {
     dbus_send: UnboundedSender<DbusMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
 
-    // vars: HashMap<VarName, VarValue>,
-    var_defs: HashMap<VarName, VarDef>,
+    var_manager: VarManager,
 }
 
 impl Engine {
@@ -19,17 +15,16 @@ impl Engine {
         dbus_send: UnboundedSender<DbusMsg>,
         worker_send: UnboundedSender<WorkerMsg>,
     ) -> Self {
+        let var_manager = VarManager::new(worker_send.clone());
         Self {
             dbus_send,
             worker_send,
-
-            // vars: HashMap::new(),
-            var_defs: HashMap::new(),
+            var_manager,
         }
     }
 
     pub fn init(&mut self) -> Result<(), AnyError> {
-        self.load_var_defs()?;
+        self.var_manager.init()?;
         Ok(())
     }
 
@@ -37,11 +32,6 @@ impl Engine {
         match msg {
             EngineMsg::Terminate => self.handle_terminate(),
         }
-    }
-
-    fn load_var_defs(&mut self) -> Result<(), AnyError> {
-        self.var_defs = files::load_var_defs()?;
-        Ok(())
     }
 
     fn handle_terminate(&mut self) {

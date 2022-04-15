@@ -3,8 +3,10 @@ extern crate waketimed_core as wtd_core;
 mod config;
 mod dbus;
 mod engine;
-pub mod files;
-pub mod messages;
+pub(crate) mod files;
+pub(crate) mod messages;
+pub(crate) mod var_fns;
+pub(crate) mod var_manager;
 mod worker;
 
 use anyhow::Error as AnyError;

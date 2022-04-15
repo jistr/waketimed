@@ -1,3 +1,3 @@
-log: trace
+log: waketimed=trace
 state_dir: tests/data/run_and_term/state
 dist_dir: tests/data/run_and_term/dist
