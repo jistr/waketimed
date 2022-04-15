@@ -21,9 +21,10 @@ pub trait PollVarFns {
 pub fn new_poll_var_fns(var_def: &VarDef) -> Result<Option<impl PollVarFns>, AnyError> {
     let kind = &var_def.kind;
     match kind {
-        VarKind::BuiltinPoll(def) => {
-            Ok(Some(new_builtin_poll_var_fns(var_def.name.as_ref(), def)?))
-        }
+        VarKind::BuiltinPoll(def) => Ok(Some(new_builtin_poll_var_fns(
+            var_def.name().as_ref(),
+            def,
+        )?)),
     }
 }
 

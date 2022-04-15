@@ -5,9 +5,8 @@ use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use std::fs::{File, ReadDir};
 use std::path::{Path, PathBuf};
-use wtd_core::model::{RawVarDef, VarDef};
+use wtd_core::model::VarDef;
 use wtd_core::VarName;
-use zbus::zvariant::{OwnedValue, Value};
 
 pub fn load_var_defs() -> Result<HashMap<VarName, VarDef>, AnyError> {
     let var_def_dirs = get_config().borrow().var_def_dirs();
@@ -17,10 +16,10 @@ pub fn load_var_defs() -> Result<HashMap<VarName, VarDef>, AnyError> {
         let var_def = parse_var_def(&def_path)?;
         trace!(
             "Loaded var def '{}' from file '{}'.",
-            var_def.name.as_ref(),
+            var_def.name().as_ref(),
             def_path.display()
         );
-        var_defs.insert(var_def.name.clone(), var_def);
+        var_defs.insert(var_def.name().clone(), var_def);
     }
     Ok(var_defs)
 }
@@ -36,8 +35,9 @@ fn parse_var_def<P: AsRef<Path>>(def_path: P) -> Result<VarDef, AnyError> {
                 def_path.as_ref().display()
             )
         })?;
-    let raw_def: RawVarDef = parse_yaml_file(&def_path)?;
-    Ok((raw_name, &raw_def).try_into()?)
+    let mut var_def: VarDef = parse_yaml_file(&def_path)?;
+    var_def.name = Some(VarName::try_from(raw_name.to_string())?);
+    Ok(var_def)
 }
 
 fn parse_yaml_file<T: DeserializeOwned, P: AsRef<Path>>(file_path: P) -> Result<T, AnyError> {

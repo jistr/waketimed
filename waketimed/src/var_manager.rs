@@ -2,7 +2,6 @@ use crate::files;
 use crate::messages::WorkerMsg;
 use crate::var_fns::{new_poll_var_fns, PollVarFns};
 use anyhow::Error as AnyError;
-
 use std::collections::HashMap;
 use tokio::sync::mpsc::UnboundedSender;
 use wtd_core::model::VarDef;
@@ -42,7 +41,7 @@ impl VarManager {
         for var_def in self.var_defs.values() {
             if let Some(var_fns) = new_poll_var_fns(var_def)? {
                 self.poll_var_fns
-                    .insert(var_def.name.clone(), Box::new(var_fns));
+                    .insert(var_def.name().clone(), Box::new(var_fns));
             }
         }
         Ok(())
