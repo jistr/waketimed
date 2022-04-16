@@ -1,6 +1,6 @@
 use crate::get_config;
 use anyhow::{anyhow, Context, Error as AnyError};
-use log::trace;
+use log::debug;
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use std::fs::{File, ReadDir};
@@ -12,12 +12,8 @@ pub fn load_var_defs() -> Result<HashMap<VarName, VarDef>, AnyError> {
     let var_def_paths = list_yaml_files_in_dirs(&var_def_dirs)?;
     let mut var_defs = HashMap::new();
     for def_path in var_def_paths.iter() {
+        debug!("Loading var def '{}'.", def_path.display());
         let var_def = parse_var_def(&def_path)?;
-        trace!(
-            "Loaded var def '{}' from file '{}'.",
-            var_def.name().as_ref(),
-            def_path.display()
-        );
         var_defs.insert(var_def.name().clone(), var_def);
     }
     Ok(var_defs)

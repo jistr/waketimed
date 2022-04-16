@@ -15,11 +15,9 @@ pub struct Server {
 impl Server {
     pub async fn handle_msg(&mut self, msg: DbusMsg) {
         match msg {
-            DbusMsg::Terminate => self.handle_terminate(),
+            DbusMsg::Terminate => {} // handled in the recv loop
         }
     }
-
-    fn handle_terminate(&mut self) {}
 }
 
 #[dbus_interface(name = "org.waketimed.waketimed1")]

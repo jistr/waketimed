@@ -1,20 +1,20 @@
 use anyhow::{anyhow, Error as AnyError};
-use async_trait::async_trait;
-use wtd_core::vars::{BuiltinPollDef, VarDef, VarKind, VarValue};
+use wtd_core::vars::{BuiltinPollDef, VarDef, VarKind};
 
 pub mod poll;
 
-#[async_trait]
+// #[async_trait]
 pub trait PollVarFns {
     /// Check whether the variable is "relevant" to the host. This is
     /// run when waketimed starts. Active variables are stored in the
     /// runtime variable map and they get polled every poll cycle for
     /// current value. Inactive variables are never polled, and do not
     /// get stored in the runtime variable map.
-    async fn check_is_active(&self) -> bool;
-    /// Poll current value of the variable. Used for updating variable
-    /// values in runtime variable map.
-    async fn poll(&self) -> VarValue;
+    // TODO: Can/should the returned function be async (return Future)?
+    fn is_active_fn(&self) -> Box<dyn FnOnce() -> bool + Send + Sync>;
+    // Poll current value of the variable. Used for updating variable
+    // values in runtime variable map.
+    //  async fn poll(&self) -> VarValue;
 }
 
 pub fn new_poll_var_fns(var_def: &VarDef) -> Result<Option<impl PollVarFns>, AnyError> {

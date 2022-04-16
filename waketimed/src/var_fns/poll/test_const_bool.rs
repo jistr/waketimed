@@ -1,7 +1,6 @@
 use crate::var_fns::PollVarFns;
-use async_trait::async_trait;
-use wtd_core::vars::VarValue;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct TestConstBoolFns {
     return_value: bool,
 }
@@ -13,13 +12,13 @@ impl TestConstBoolFns {
     }
 }
 
-#[async_trait]
+// #[async_trait]
 impl PollVarFns for TestConstBoolFns {
-    async fn check_is_active(&self) -> bool {
-        true
+    fn is_active_fn(&self) -> Box<dyn FnOnce() -> bool + Send + Sync> {
+        Box::new(move || true)
     }
 
-    async fn poll(&self) -> VarValue {
-        VarValue::Bool(self.return_value)
-    }
+    // async fn poll(&self) -> VarValue {
+    //     VarValue::Bool(self.return_value)
+    // }
 }
