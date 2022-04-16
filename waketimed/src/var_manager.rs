@@ -4,8 +4,7 @@ use crate::var_fns::{new_poll_var_fns, PollVarFns};
 use anyhow::Error as AnyError;
 use std::collections::HashMap;
 use tokio::sync::mpsc::UnboundedSender;
-use wtd_core::model::VarDef;
-use wtd_core::VarName;
+use wtd_core::vars::{VarDef, VarName};
 
 pub struct VarManager {
     #[allow(dead_code)]

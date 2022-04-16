@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Error as AnyError};
 use async_trait::async_trait;
-use wtd_core::model::{BuiltinPollDef, VarDef, VarKind};
-use wtd_core::VarValue;
+use wtd_core::vars::{BuiltinPollDef, VarDef, VarKind, VarValue};
 
 pub mod poll;
 

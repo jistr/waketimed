@@ -1,4 +1,4 @@
-use crate::VarError;
+use super::VarError;
 use std::collections::HashMap;
 use zvariant::OwnedValue;
 

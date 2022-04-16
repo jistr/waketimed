@@ -1,4 +1,4 @@
-use crate::{RuleError, RuleName};
+use super::{RuleError, RuleName};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 use zvariant::{OwnedValue, Type};
@@ -16,7 +16,7 @@ pub enum RuleTypeDef {
 }
 
 impl TryFrom<&RawRuleDef> for RuleDef {
-    type Error = crate::RuleError;
+    type Error = super::RuleError;
 
     fn try_from(raw_def: &RawRuleDef) -> Result<Self, Self::Error> {
         Ok(RuleDef {

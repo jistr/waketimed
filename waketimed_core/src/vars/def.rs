@@ -1,5 +1,4 @@
-use super::var_params::param_required;
-use crate::{VarError, VarName};
+use super::{param_required, VarError, VarName};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 use zvariant::{OwnedValue, Value};

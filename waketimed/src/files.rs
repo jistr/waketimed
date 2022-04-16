@@ -5,8 +5,7 @@ use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use std::fs::{File, ReadDir};
 use std::path::{Path, PathBuf};
-use wtd_core::model::VarDef;
-use wtd_core::VarName;
+use wtd_core::vars::{VarDef, VarName};
 
 pub fn load_var_defs() -> Result<HashMap<VarName, VarDef>, AnyError> {
     let var_def_dirs = get_config().borrow().var_def_dirs();
