@@ -12,7 +12,6 @@ fn test_run_and_term() -> Result<(), AnyError> {
     for _ in 0..3 {
         supervisor.wait_for_stderr_ms(2000, "waketimed] Starting")?;
     }
-    // Enter running state.
     supervisor.wait_for_stderr_ms(2000, "Engine entering state 'Running'.")?;
     supervisor.terminate()?;
     // Join 3 threads.

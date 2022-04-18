@@ -17,7 +17,7 @@ pub trait PollVarFns {
     //  async fn poll(&self) -> VarValue;
 }
 
-pub fn new_poll_var_fns(var_def: &VarDef) -> Result<Option<impl PollVarFns>, AnyError> {
+pub fn new_poll_var_fns(var_def: &VarDef) -> Result<Option<Box<dyn PollVarFns>>, AnyError> {
     let kind = &var_def.kind;
     match kind {
         VarKind::BuiltinPoll(def) => Ok(Some(new_builtin_poll_var_fns(
@@ -30,9 +30,10 @@ pub fn new_poll_var_fns(var_def: &VarDef) -> Result<Option<impl PollVarFns>, Any
 fn new_builtin_poll_var_fns(
     name: &str,
     bp_def: &BuiltinPollDef,
-) -> Result<impl PollVarFns, AnyError> {
+) -> Result<Box<dyn PollVarFns>, AnyError> {
     match bp_def.builtin_name.as_str() {
-        "test_const_bool" => Ok(poll::test_const_bool::TestConstBoolFns::new()),
+        "test_const_bool" => Ok(Box::new(poll::test_const_bool::TestConstBoolFns::new())),
+        "test_inactive" => Ok(Box::new(poll::test_inactive::TestInactiveFns::new())),
         _ => Err(anyhow!(
             "Var '{}' definition specified unknown builtin_name: '{}'.",
             name,

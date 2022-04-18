@@ -58,8 +58,7 @@ impl VarManager {
         self.poll_var_fns = HashMap::new();
         for var_def in self.var_defs.values() {
             if let Some(var_fns) = new_poll_var_fns(var_def)? {
-                self.poll_var_fns
-                    .insert(var_def.name().clone(), Box::new(var_fns));
+                self.poll_var_fns.insert(var_def.name().clone(), var_fns);
             }
         }
         Ok(())
