@@ -1,6 +1,8 @@
 use anyhow::{anyhow, Context, Error as AnyError};
 use nix::sys::signal::{self, Signal};
 use nix::unistd::Pid;
+use std::collections::HashSet;
+use std::fmt::Debug;
 use std::io::{BufRead, BufReader, Read};
 use std::path::PathBuf;
 use std::process::{Child, ChildStderr, ChildStdout, Command, Stdio};
@@ -74,13 +76,23 @@ impl Supervisor {
         }
     }
 
-    pub fn wait_for_stderr_ms<S: AsRef<str>>(
+    pub fn wait_for_stderr_ms<S: AsRef<str> + Debug>(
         &mut self,
         timeout: u64,
         substr: S,
     ) -> Result<(), AnyError> {
+        let substrs = vec![substr];
+        self.wait_for_stderr_unordered_ms(timeout, &substrs)
+    }
+
+    pub fn wait_for_stderr_unordered_ms<S: AsRef<str> + Debug>(
+        &mut self,
+        timeout: u64,
+        substrs: &[S],
+    ) -> Result<(), AnyError> {
         let stderr = Arc::clone(&self.stderr);
-        let substr_clone = substr.as_ref().to_string();
+        let mut substrs_set: HashSet<String> =
+            substrs.iter().map(|s| s.as_ref().to_string()).collect();
         self.wait_upto_ms_or_kill(timeout, move || {
             let mut line_buf = String::new();
             loop {
@@ -90,13 +102,23 @@ impl Supervisor {
                     .read_line(&mut line_buf)
                     .expect("Failed to read line from stderr.");
                 print!("{}", &line_buf);
-                if line_buf.contains(&substr_clone) {
+                let mut found = None;
+                for substr in substrs_set.iter() {
+                    if line_buf.contains(substr.as_str()) {
+                        found = Some(substr.clone());
+                        break;
+                    }
+                }
+                if let Some(substr) = found {
+                    substrs_set.remove(&substr);
+                }
+                if substrs_set.is_empty() {
                     break;
                 }
                 line_buf.clear();
             }
         })
-        .with_context(|| format!("Failed waiting for stderr substring '{}'", substr.as_ref()))
+        .with_context(|| format!("Failed waiting for stderr substrings {:?}", substrs))
     }
 
     pub fn wait_upto_ms_or_kill<R: 'static, F: 'static>(
