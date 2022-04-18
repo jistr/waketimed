@@ -10,22 +10,19 @@ fn test_run_and_term() -> Result<(), AnyError> {
     let mut supervisor = helpers::Supervisor::new(wtd_proc);
     // Start 3 threads.
     for _ in 0..3 {
-        supervisor.wait_for_stderr_ms(2000, "waketimed] Starting")?;
+        supervisor.wait_for_stderr("waketimed] Starting")?;
     }
-    supervisor.wait_for_stderr_unordered_ms(
-        2000,
-        &[
-            "var_manager] Var 'test_const_true' is active.",
-            "var_manager] Var 'test_inactive' is inactive, forgetting it.",
-        ],
-    )?;
-    supervisor.wait_for_stderr_ms(2000, "Engine entering state 'Running'.")?;
+    supervisor.wait_for_stderr_unordered(&[
+        "var_manager] Var 'test_const_true' is active.",
+        "var_manager] Var 'test_inactive' is inactive, forgetting it.",
+    ])?;
+    supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
     supervisor.terminate()?;
     // Join 3 threads.
     for _ in 0..3 {
-        supervisor.wait_for_stderr_ms(2000, "waketimed] Joining")?;
+        supervisor.wait_for_stderr("waketimed] Joining")?;
     }
-    supervisor.wait_for_stderr_ms(2000, "waketimed] Terminating main thread.")?;
+    supervisor.wait_for_stderr("waketimed] Terminating main thread.")?;
     supervisor.assert_success()?;
     Ok(())
 }

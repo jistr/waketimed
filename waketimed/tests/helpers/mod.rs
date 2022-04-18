@@ -10,6 +10,8 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time::Duration;
 
+const DEFAULT_OUTPUT_WAIT_MS: u64 = 3000;
+
 pub fn waketimed_command() -> Command {
     let mut cmd_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     cmd_path.push("../target/debug/waketimed");
@@ -74,6 +76,17 @@ impl Supervisor {
             }
             Err(e) => Err(e).context("Could not query waketimed process return status."),
         }
+    }
+
+    pub fn wait_for_stderr<S: AsRef<str> + Debug>(&mut self, substr: S) -> Result<(), AnyError> {
+        self.wait_for_stderr_ms(DEFAULT_OUTPUT_WAIT_MS, substr)
+    }
+
+    pub fn wait_for_stderr_unordered<S: AsRef<str> + Debug>(
+        &mut self,
+        substrs: &[S],
+    ) -> Result<(), AnyError> {
+        self.wait_for_stderr_unordered_ms(DEFAULT_OUTPUT_WAIT_MS, substrs)
     }
 
     pub fn wait_for_stderr_ms<S: AsRef<str> + Debug>(
