@@ -10,6 +10,7 @@ use wtd_core::vars::{VarDef, VarName};
 pub fn load_var_defs() -> Result<HashMap<VarName, VarDef>, AnyError> {
     let var_def_dirs = get_config().borrow().var_def_dirs();
     let var_def_dirs_existing = into_existing_dirs(var_def_dirs)?;
+    debug!("Using var_def directories: {:?}.", &var_def_dirs_existing);
     let var_def_paths = list_yaml_files_in_dirs(&var_def_dirs_existing)?;
     let mut var_defs = HashMap::new();
     for def_path in var_def_paths.iter() {

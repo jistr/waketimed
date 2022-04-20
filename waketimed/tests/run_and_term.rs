@@ -15,6 +15,7 @@ fn test_run_and_term() -> Result<(), AnyError> {
         "waketimed] Starting D-Bus thread.",
         "waketimed] Starting signal thread.",
         "waketimed] Starting worker thread.",
+        "Using var_def directories: [\"tests/data/run_and_term/dist/var_def\", \"tests/data/run_and_term/state/var_def\"].",
     ])?;
     supervisor.wait_for_stderr_unordered(&[
         "var_manager] Var 'test_const_true' is active.",
