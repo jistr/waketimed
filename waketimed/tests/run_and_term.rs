@@ -2,6 +2,9 @@ use anyhow::{Context, Error as AnyError};
 
 mod helpers;
 
+/// Test basic run-and-terminate scenario: the daemon starts, loads
+/// data definitions, the engine enters running state, the daemon
+/// receives SIGTERM and terminates safely.
 #[test]
 fn test_run_and_term() -> Result<(), AnyError> {
     let mut cmd = helpers::waketimed_command();

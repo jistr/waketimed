@@ -9,7 +9,8 @@ use wtd_core::vars::{VarDef, VarName};
 
 pub fn load_var_defs() -> Result<HashMap<VarName, VarDef>, AnyError> {
     let var_def_dirs = get_config().borrow().var_def_dirs();
-    let var_def_paths = list_yaml_files_in_dirs(&var_def_dirs)?;
+    let var_def_dirs_existing = into_existing_dirs(var_def_dirs)?;
+    let var_def_paths = list_yaml_files_in_dirs(&var_def_dirs_existing)?;
     let mut var_defs = HashMap::new();
     for def_path in var_def_paths.iter() {
         debug!("Loading var def '{}'.", def_path.display());
@@ -41,6 +42,33 @@ fn parse_yaml_file<T: DeserializeOwned, P: AsRef<Path>>(file_path: P) -> Result<
     let parsed: T = serde_yaml::from_reader(reader)
         .with_context(|| format!("Cannot parse file '{}'", file_path.as_ref().display(),))?;
     Ok(parsed)
+}
+
+fn into_existing_dirs(dirs: Vec<PathBuf>) -> Result<Vec<PathBuf>, AnyError> {
+    let mut existing_dirs = Vec::new();
+    for dir in dirs.into_iter() {
+        // NOTE: When Path.try_exists is stabilized, it can be used instead.
+        let read_dir = dir.as_path().read_dir();
+        let exists = match read_dir {
+            Ok(_) => true,
+            Err(e) => {
+                if matches!(e.kind(), std::io::ErrorKind::NotFound) {
+                    false
+                } else {
+                    return Err(e).with_context(|| {
+                        format!(
+                            "Error trying to read directory '{}'.",
+                            dir.as_path().display()
+                        )
+                    });
+                }
+            }
+        };
+        if exists {
+            existing_dirs.push(dir);
+        }
+    }
+    Ok(existing_dirs)
 }
 
 fn list_yaml_files_in_dirs<P: AsRef<Path>>(dirs: &[P]) -> Result<Vec<PathBuf>, AnyError> {

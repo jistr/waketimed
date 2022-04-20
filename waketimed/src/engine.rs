@@ -30,6 +30,7 @@ impl Engine {
     pub fn init(&mut self) -> Result<(), AnyError> {
         self.set_state(EngineState::Initializing);
         self.var_manager.init()?;
+        self.set_state_running_maybe();
         Ok(())
     }
 
