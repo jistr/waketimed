@@ -18,7 +18,7 @@ fn test_run_and_term() -> Result<(), AnyError> {
         "Using var_def directories: [\"tests/data/run_and_term/dist/var_def\", \"tests/data/run_and_term/state/var_def\"].",
     ])?;
     supervisor.wait_for_stderr_unordered(&[
-        "var_manager] Var 'test_const_true' is active.",
+        "var_manager] Var 'test_poll_true' is active.",
         "var_manager] Var 'test_inactive' is inactive, forgetting it.",
     ])?;
     supervisor.wait_for_stderr("Engine entering state 'Running'.")?;

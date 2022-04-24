@@ -1,11 +1,11 @@
 use crate::var_fns::PollVarFns;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct TestConstBoolFns {
+pub struct TestPollBoolFns {
     return_value: bool,
 }
 
-impl TestConstBoolFns {
+impl TestPollBoolFns {
     pub fn new() -> Self {
         // TODO: allow specifying return value from var params
         Self { return_value: true }
@@ -13,7 +13,7 @@ impl TestConstBoolFns {
 }
 
 // #[async_trait]
-impl PollVarFns for TestConstBoolFns {
+impl PollVarFns for TestPollBoolFns {
     fn is_active_fn(&self) -> Box<dyn FnOnce() -> bool + Send + Sync> {
         Box::new(move || true)
     }
