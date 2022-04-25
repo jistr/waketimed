@@ -14,6 +14,7 @@ pub struct Server {
 
 impl Server {
     pub async fn handle_msg(&mut self, msg: DbusMsg) {
+        trace!("Received DbusMsg::{:?}.", &msg);
         match msg {
             DbusMsg::Terminate => {} // handled in the recv loop
         }

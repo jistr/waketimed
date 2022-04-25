@@ -35,8 +35,8 @@ fn main() -> Result<(), AnyError> {
 
     let worker_thread = worker_thread_spawn(worker_recv, engine_send.clone());
     let dbus_thread = dbus_thread_spawn(dbus_recv, engine_send.clone());
-    let signal_thread = signal_thread_spawn(engine_send)?;
-    main_thread_main(engine_recv, dbus_send, worker_send)?;
+    let signal_thread = signal_thread_spawn(engine_send.clone())?;
+    main_thread_main(engine_recv, engine_send, dbus_send, worker_send)?;
     trace!("Joining signal thread.");
     signal_thread.join().expect("Failed to join signal thread.");
     trace!("Joining D-Bus thread.");
@@ -58,10 +58,11 @@ fn setup_logger() {
 
 fn main_thread_main(
     mut engine_recv: UnboundedReceiver<EngineMsg>,
+    engine_send: UnboundedSender<EngineMsg>,
     dbus_send: UnboundedSender<DbusMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
 ) -> Result<(), AnyError> {
-    let mut engine = Engine::new(dbus_send, worker_send);
+    let mut engine = Engine::new(dbus_send, engine_send, worker_send);
     engine.init()?;
     while let Some(msg) = engine_recv.blocking_recv() {
         let terminate = msg == EngineMsg::Terminate;
@@ -112,6 +113,8 @@ fn worker_thread_spawn(
         .spawn(move || {
             let runtime = tokio::runtime::Builder::new_multi_thread()
                 .worker_threads(WORKER_THREADS)
+                .enable_io()
+                .enable_time()
                 .build()?;
             runtime.block_on(worker_thread_main(worker_recv, engine_send))
         })

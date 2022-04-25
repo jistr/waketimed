@@ -26,11 +26,11 @@ pub struct Config {
     // waketimed binary. Contains built-in rule definitions.
     #[serde(default = "default_dist_dir")]
     pub dist_dir: String,
-    // Time between re-checking poll-based variables, in seconds.
+    // Time between re-checking poll-based variables, in milliseconds.
     // Larger values mean less exact times of updating variables (less
     // exact times of falling asleep), but consume less CPU.
-    #[serde(default = "default_variable_poll_period")]
-    pub variable_poll_period: u32,
+    #[serde(default = "default_poll_variable_interval")]
+    pub poll_variable_interval: u64,
 
     // Time to stay up (prevent sleep) after waketimed starts, in
     // seconds. Results in automatic creation of a "stay up until"
@@ -156,8 +156,8 @@ fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
     if let Ok(value) = env::var("WAKETIMED_STAYUP_CLEARED_AWAKE_TIME") {
         cfg.stayup_cleared_awake_time = value.parse::<u32>()?;
     }
-    if let Ok(value) = env::var("WAKETIMED_VARIABLE_POLL_PERIOD") {
-        cfg.variable_poll_period = value.parse::<u32>()?;
+    if let Ok(value) = env::var("WAKETIMED_POLL_VARIABLE_INTERVAL") {
+        cfg.poll_variable_interval = value.parse::<u64>()?;
     }
     if let Ok(value) = env::var("WAKETIMED_SLEEP_APPROACHING_SIGNAL_INTERVALS") {
         let mut intervals: Vec<u32> = vec![];
@@ -199,8 +199,8 @@ fn default_stayup_cleared_awake_time() -> u32 {
     10
 }
 
-fn default_variable_poll_period() -> u32 {
-    3
+fn default_poll_variable_interval() -> u64 {
+    3000
 }
 
 fn default_sleep_approaching_signal_intervals() -> Vec<u32> {

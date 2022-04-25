@@ -22,6 +22,8 @@ fn test_run_and_term() -> Result<(), AnyError> {
         "var_manager] Var 'test_inactive' is inactive, forgetting it.",
     ])?;
     supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
+    supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;
+    supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;
     supervisor.terminate()?;
     supervisor.wait_for_stderr_unordered(&[
         "waketimed] Joining D-Bus thread.",

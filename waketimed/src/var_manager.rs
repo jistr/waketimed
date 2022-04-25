@@ -1,4 +1,5 @@
 use crate::files;
+use crate::get_config;
 use crate::messages::WorkerMsg;
 use crate::var_fns::{new_poll_var_fns, PollVarFns};
 use anyhow::Error as AnyError;
@@ -8,7 +9,6 @@ use tokio::sync::mpsc::UnboundedSender;
 use wtd_core::vars::{VarDef, VarName};
 
 pub struct VarManager {
-    #[allow(dead_code)]
     worker_send: UnboundedSender<WorkerMsg>,
     // vars: HashMap<VarName, VarValue>,
     poll_var_fns: HashMap<VarName, Box<dyn PollVarFns>>,
@@ -31,6 +31,18 @@ impl VarManager {
         self.load_var_defs()?;
         self.load_poll_var_fns()?;
         self.forget_inactive_poll_vars()?;
+        Ok(())
+    }
+
+    pub fn poll_vars(&mut self) -> Result<(), AnyError> {
+        // TODO: implement
+        Ok(())
+    }
+
+    pub fn spawn_poll_var_interval(&mut self) -> Result<(), AnyError> {
+        let interval = get_config().borrow().poll_variable_interval;
+        self.worker_send
+            .send(WorkerMsg::SpawnPollVarInterval(interval))?;
         Ok(())
     }
 

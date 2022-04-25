@@ -1,12 +1,13 @@
 use crate::messages::{DbusMsg, EngineMsg, WorkerMsg};
 use crate::var_manager::VarManager;
-use anyhow::Error as AnyError;
-use log::{debug, warn};
+use anyhow::{Context, Error as AnyError};
+use log::{debug, error, trace, warn};
 use tokio::sync::mpsc::UnboundedSender;
 use wtd_core::vars::VarName;
 
 pub struct Engine {
     dbus_send: UnboundedSender<DbusMsg>,
+    engine_send: UnboundedSender<EngineMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
 
     state: EngineState,
@@ -16,11 +17,13 @@ pub struct Engine {
 impl Engine {
     pub fn new(
         dbus_send: UnboundedSender<DbusMsg>,
+        engine_send: UnboundedSender<EngineMsg>,
         worker_send: UnboundedSender<WorkerMsg>,
     ) -> Self {
         let var_manager = VarManager::new(worker_send.clone());
         Self {
             dbus_send,
+            engine_send,
             worker_send,
             state: EngineState::Initializing,
             var_manager,
@@ -35,6 +38,7 @@ impl Engine {
     }
 
     pub fn handle_msg(&mut self, msg: EngineMsg) {
+        trace!("Received EngineMsg::{:?}.", &msg);
         match self.state {
             EngineState::Initializing => match msg {
                 EngineMsg::ReturnVarIsActive(var_name, is_active) => {
@@ -53,6 +57,7 @@ impl Engine {
                 }
             },
             EngineState::Running => match msg {
+                EngineMsg::PollVarsTick => self.handle_poll_vars_tick(),
                 EngineMsg::Terminate => {
                     self.handle_terminate();
                 }
@@ -72,6 +77,11 @@ impl Engine {
         }
     }
 
+    fn handle_poll_vars_tick(&mut self) {
+        let result = self.var_manager.poll_vars().context("Failed to poll vars.");
+        self.term_on_err(result);
+    }
+
     fn handle_terminate(&mut self) {
         self.set_state(EngineState::Terminating);
         self.dbus_send
@@ -88,6 +98,20 @@ impl Engine {
         self.set_state_running_maybe();
     }
 
+    fn handle_state_transition(&mut self, _old_state: EngineState, new_state: EngineState) {
+        #[allow(clippy::single_match)]
+        match new_state {
+            EngineState::Running => {
+                let res = self
+                    .var_manager
+                    .spawn_poll_var_interval()
+                    .context("Fatal: Failed to set up variable poll interval.");
+                self.term_on_err(res);
+            }
+            _ => {}
+        }
+    }
+
     fn set_state_running_maybe(&mut self) {
         if self.var_manager.waitlist_active_is_empty() {
             self.set_state(EngineState::Running);
@@ -96,11 +120,26 @@ impl Engine {
 
     fn set_state(&mut self, state: EngineState) {
         debug!("Engine entering state '{:?}'.", state);
+        let old_state = self.state;
         self.state = state;
+        self.handle_state_transition(old_state, state);
+    }
+
+    fn term_on_err<T>(&mut self, result: Result<T, AnyError>) -> Option<T> {
+        match result {
+            Ok(val) => Some(val),
+            Err(e) => {
+                error!("{:#}", e);
+                self.engine_send
+                    .send(EngineMsg::Terminate)
+                    .expect("Failed to send Terminate message.");
+                None
+            }
+        }
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 enum EngineState {
     Initializing,
     Running,

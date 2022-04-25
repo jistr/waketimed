@@ -8,12 +8,14 @@ pub enum DbusMsg {
 
 #[derive(Debug, PartialEq)]
 pub enum EngineMsg {
+    PollVarsTick,
     ReturnVarIsActive(VarName, bool),
     Terminate,
 }
 
 pub enum WorkerMsg {
     CallVarIsActive(VarName, Box<dyn FnOnce() -> bool + Send + Sync>),
+    SpawnPollVarInterval(u64),
     Terminate,
 }
 
@@ -22,8 +24,9 @@ impl fmt::Debug for WorkerMsg {
         use WorkerMsg::*;
         write!(f, "WorkerMsg::")?;
         match self {
-            Terminate => write!(f, "Terminate"),
             CallVarIsActive(ref var_name, _) => write!(f, "CallVarIsActive({:?}, _)", var_name),
+            SpawnPollVarInterval(interval) => write!(f, "SpawnPollVarInterval({})", interval),
+            Terminate => write!(f, "Terminate"),
         }
     }
 }
