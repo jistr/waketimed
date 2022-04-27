@@ -23,7 +23,9 @@ fn test_run_and_term() -> Result<(), AnyError> {
     ])?;
     supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
     supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;
+    supervisor.wait_for_stderr("Received EngineMsg::ReturnVarPoll")?;
     supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;
+    supervisor.wait_for_stderr("Received EngineMsg::ReturnVarPoll")?;
     supervisor.terminate()?;
     supervisor.wait_for_stderr_unordered(&[
         "waketimed] Joining D-Bus thread.",

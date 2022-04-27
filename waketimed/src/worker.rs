@@ -4,7 +4,7 @@ use log::{error, trace};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::task::JoinHandle;
 use tokio::time::{self, Duration};
-use wtd_core::vars::VarName;
+use wtd_core::vars::{VarName, VarValue};
 
 pub struct Worker {
     engine_send: UnboundedSender<EngineMsg>,
@@ -24,14 +24,15 @@ impl Worker {
         trace!("Received WorkerMsg::{:?}.", &msg);
         match msg {
             CallVarIsActive(var_name, is_active_fn) => {
-                self.handle_call_is_active(var_name, is_active_fn).await
+                self.handle_call_var_is_active(var_name, is_active_fn).await
             }
+            CallVarPoll(var_name, poll_fn) => self.handle_call_var_poll(var_name, poll_fn).await,
             SpawnPollVarInterval(interval) => self.handle_spawn_poll_var_interval(interval).await,
             Terminate => {} // handled in the recv loop
         }
     }
 
-    async fn handle_call_is_active(
+    async fn handle_call_var_is_active(
         &mut self,
         var_name: VarName,
         is_active_fn: Box<dyn FnOnce() -> bool + Send + Sync>,
@@ -40,6 +41,19 @@ impl Worker {
         // should be investigated if is_active_fn can be async.
         self.engine_send
             .send(EngineMsg::ReturnVarIsActive(var_name, is_active_fn()))
+            .context("Could not send EngineMsg::ReturnVarIsActive")
+            .unwrap_or_else(|e| error!("{:?}", e));
+    }
+
+    async fn handle_call_var_poll(
+        &mut self,
+        var_name: VarName,
+        poll_fn: Box<dyn FnOnce() -> VarValue + Send + Sync>,
+    ) {
+        // TODO: For now this will block one of the worker threads. It
+        // should be investigated if poll_fn can be async.
+        self.engine_send
+            .send(EngineMsg::ReturnVarPoll(var_name, poll_fn()))
             .context("Could not send EngineMsg::ReturnVarIsActive")
             .unwrap_or_else(|e| error!("{:?}", e));
     }

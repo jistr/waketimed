@@ -6,24 +6,26 @@ use anyhow::Error as AnyError;
 use log::debug;
 use std::collections::{HashMap, HashSet};
 use tokio::sync::mpsc::UnboundedSender;
-use wtd_core::vars::{VarDef, VarName};
+use wtd_core::vars::{VarDef, VarName, VarValue};
 
 pub struct VarManager {
     worker_send: UnboundedSender<WorkerMsg>,
-    // vars: HashMap<VarName, VarValue>,
+    vars: HashMap<VarName, VarValue>,
     poll_var_fns: HashMap<VarName, Box<dyn PollVarFns>>,
     var_defs: HashMap<VarName, VarDef>,
     waitlist_active: HashSet<VarName>,
+    waitlist_poll: HashSet<VarName>,
 }
 
 impl VarManager {
     pub fn new(worker_send: UnboundedSender<WorkerMsg>) -> Self {
         Self {
             worker_send,
-            // vars: HashMap::new(),
+            vars: HashMap::new(),
             poll_var_fns: HashMap::new(),
             var_defs: HashMap::new(),
             waitlist_active: HashSet::new(),
+            waitlist_poll: HashSet::new(),
         }
     }
 
@@ -34,8 +36,21 @@ impl VarManager {
         Ok(())
     }
 
+    /// NOTE: is_initialized can return false later in the life time of
+    /// VarManager, but it only makes sense to check is_initialized
+    /// when Engine is trying to enter Running state, and there it will
+    /// behave correctly.
+    pub fn is_initialized(&self) -> bool {
+        self.waitlist_active.is_empty() && self.waitlist_poll.is_empty()
+    }
+
     pub fn poll_vars(&mut self) -> Result<(), AnyError> {
-        // TODO: implement
+        self.waitlist_poll = HashSet::with_capacity(self.poll_var_fns.len());
+        for (var_name, var_fns) in self.poll_var_fns.iter() {
+            self.waitlist_poll.insert(var_name.clone());
+            self.worker_send
+                .send(WorkerMsg::CallVarPoll(var_name.clone(), var_fns.poll_fn()))?;
+        }
         Ok(())
     }
 
@@ -46,19 +61,24 @@ impl VarManager {
         Ok(())
     }
 
-    pub fn handle_return_var_is_active(&mut self, var_name: &VarName, is_active: bool) {
+    pub fn handle_return_var_is_active(&mut self, var_name: VarName, is_active: bool) {
         if is_active {
             debug!("Var '{}' is active.", var_name.as_ref());
         } else {
             debug!("Var '{}' is inactive, forgetting it.", var_name.as_ref());
-            self.poll_var_fns.remove(var_name);
-            self.var_defs.remove(var_name);
+            self.poll_var_fns.remove(&var_name);
+            self.var_defs.remove(&var_name);
         }
-        self.waitlist_active.remove(var_name);
+        self.waitlist_active.remove(&var_name);
+        // If the last variable has been checked for activity, intitialize variables.
+        if self.waitlist_active.is_empty() {
+            self.poll_vars().expect("Unable to poll vars");
+        }
     }
 
-    pub fn waitlist_active_is_empty(&self) -> bool {
-        self.waitlist_active.is_empty()
+    pub fn handle_return_var_poll(&mut self, var_name: VarName, value: VarValue) {
+        self.waitlist_poll.remove(&var_name);
+        self.vars.insert(var_name, value);
     }
 
     fn load_var_defs(&mut self) -> Result<(), AnyError> {

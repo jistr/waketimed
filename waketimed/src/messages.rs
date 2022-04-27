@@ -1,5 +1,5 @@
 use std::fmt;
-use wtd_core::vars::VarName;
+use wtd_core::vars::{VarName, VarValue};
 
 #[derive(Debug, PartialEq)]
 pub enum DbusMsg {
@@ -10,11 +10,13 @@ pub enum DbusMsg {
 pub enum EngineMsg {
     PollVarsTick,
     ReturnVarIsActive(VarName, bool),
+    ReturnVarPoll(VarName, VarValue),
     Terminate,
 }
 
 pub enum WorkerMsg {
     CallVarIsActive(VarName, Box<dyn FnOnce() -> bool + Send + Sync>),
+    CallVarPoll(VarName, Box<dyn FnOnce() -> VarValue + Send + Sync>),
     SpawnPollVarInterval(u64),
     Terminate,
 }
@@ -25,6 +27,7 @@ impl fmt::Debug for WorkerMsg {
         write!(f, "WorkerMsg::")?;
         match self {
             CallVarIsActive(ref var_name, _) => write!(f, "CallVarIsActive({:?}, _)", var_name),
+            CallVarPoll(ref var_name, _) => write!(f, "CallVarPoll({:?}, _)", var_name),
             SpawnPollVarInterval(interval) => write!(f, "SpawnPollVarInterval({})", interval),
             Terminate => write!(f, "Terminate"),
         }

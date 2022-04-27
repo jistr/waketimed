@@ -1,4 +1,5 @@
 use crate::var_fns::PollVarFns;
+use wtd_core::vars::VarValue;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TestPollBoolFns {
@@ -18,7 +19,8 @@ impl PollVarFns for TestPollBoolFns {
         Box::new(move || true)
     }
 
-    // async fn poll(&self) -> VarValue {
-    //     VarValue::Bool(self.return_value)
-    // }
+    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValue + Send + Sync> {
+        let value = self.return_value;
+        Box::new(move || VarValue::Bool(value))
+    }
 }

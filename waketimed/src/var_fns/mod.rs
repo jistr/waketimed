@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Error as AnyError};
-use wtd_core::vars::{BuiltinPollDef, VarDef, VarKind};
+use wtd_core::vars::{BuiltinPollDef, VarDef, VarKind, VarValue};
 
 pub mod poll;
 
@@ -14,7 +14,8 @@ pub trait PollVarFns {
     fn is_active_fn(&self) -> Box<dyn FnOnce() -> bool + Send + Sync>;
     // Poll current value of the variable. Used for updating variable
     // values in runtime variable map.
-    //  async fn poll(&self) -> VarValue;
+    // TODO: Can/should the returned function be async (return Future)?
+    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValue + Send + Sync>;
 }
 
 pub fn new_poll_var_fns(var_def: &VarDef) -> Result<Option<Box<dyn PollVarFns>>, AnyError> {
