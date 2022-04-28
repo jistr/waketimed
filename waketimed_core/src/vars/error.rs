@@ -5,7 +5,7 @@ pub enum VarError {
     #[error("Var parameter '{0}' is missing.")]
     ParamMissing(String),
     #[error("Var parameter '{0}' is of incorrect data type.")]
-    IncorrectParamType(String, #[source] zvariant::Error),
+    IncorrectParamType(String, #[source] serde_yaml::Error),
     #[error("Incorrect var name.")]
     IncorrectName(#[source] VarNameError),
 }

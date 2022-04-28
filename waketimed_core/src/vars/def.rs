@@ -1,5 +1,7 @@
 use super::VarName;
 use serde_derive::{Deserialize, Serialize};
+use serde_yaml::Value;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VarDef {
@@ -32,4 +34,6 @@ pub enum VarKind {
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BuiltinPollDef {
     pub builtin_name: String,
+    #[serde(default)]
+    pub params: HashMap<String, Value>,
 }

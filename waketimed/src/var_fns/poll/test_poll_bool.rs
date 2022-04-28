@@ -1,5 +1,8 @@
 use crate::var_fns::PollVarFns;
-use wtd_core::vars::VarValue;
+use anyhow::Error as AnyError;
+use serde_yaml::Value;
+use std::collections::HashMap;
+use wtd_core::vars::{param_required, VarValue};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TestPollBoolFns {
@@ -7,9 +10,9 @@ pub struct TestPollBoolFns {
 }
 
 impl TestPollBoolFns {
-    pub fn new() -> Self {
-        // TODO: allow specifying return value from var params
-        Self { return_value: true }
+    pub fn new(params: &HashMap<String, Value>) -> Result<Self, AnyError> {
+        let return_value = param_required::<bool>(params, "return_value")?;
+        Ok(Self { return_value })
     }
 }
 
