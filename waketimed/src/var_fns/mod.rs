@@ -25,6 +25,7 @@ pub fn new_poll_var_fns(var_def: &VarDef) -> Result<Option<Box<dyn PollVarFns>>,
             var_def.name().as_ref(),
             def,
         )?)),
+        _ => Ok(None),
     }
 }
 

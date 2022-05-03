@@ -106,6 +106,9 @@ impl Engine {
 
     fn handle_return_var_poll(&mut self, var_name: VarName, value: VarValue) {
         self.var_manager.handle_return_var_poll(var_name, value);
+        if self.var_manager.waitlist_poll_is_empty() {
+            self.var_manager.update_category_vars();
+        }
         self.set_state_running_maybe();
     }
 

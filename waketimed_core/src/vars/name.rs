@@ -1,12 +1,14 @@
 use super::VarNameError;
 use lazy_static::lazy_static;
 use regex::Regex;
+use serde_derive::{Deserialize, Serialize};
+use std::fmt;
 
 const VAR_NAME_MAX_LENGTH: usize = 40;
 const VAR_NAME_CHARSET_REGEX: &str = r"(?-u)^[a-z0-9_]+$";
 const VAR_NAME_PATTERN_REGEX: &str = r"(?-u)^[a-z0-9]+(?:_[a-z0-9]+)*$";
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VarName(String);
 
 impl TryFrom<String> for VarName {
@@ -51,6 +53,12 @@ impl AsMut<str> for VarName {
 impl From<VarName> for String {
     fn from(var_name: VarName) -> String {
         var_name.0
+    }
+}
+
+impl fmt::Display for VarName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.write_str(&self.0)
     }
 }
 
