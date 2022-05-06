@@ -7,11 +7,13 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-static mut CONFIG: Option<Rc<RefCell<Config>>> = None;
+thread_local! {
+    static CONFIG: Rc<RefCell<Config>> = Rc::new(RefCell::new(Config::default()));
+}
 const CONFIG_FILE_VAR: &str = "WAKETIMED_CONFIG";
 const DEFAULT_CONFIG_FILE: &str = "/etc/waketimed/config.yaml";
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Config {
     // Log level.
     #[serde(default = "default_log")]
@@ -120,22 +122,16 @@ pub fn load() -> Result<(), AnyError> {
     populate_config_from_env(&mut cfg)?;
     repair_config(&mut cfg)?;
 
-    unsafe {
-        CONFIG = Some(Rc::new(RefCell::new(cfg)));
-    }
+    CONFIG.with(move |c| c.replace(cfg));
     Ok(())
 }
 
 pub fn get_config() -> Rc<RefCell<Config>> {
-    unsafe {
-        CONFIG
-            .clone()
-            .expect("Called get_config but config doesn't exist yet.")
-    }
+    CONFIG.with(|c| c.clone())
 }
 
 pub fn log_config() -> Result<(), AnyError> {
-    let cfg = get_config();
+    let cfg: Rc<RefCell<Config>> = get_config();
     debug!(
         "Config settings:\n{}",
         serde_yaml::to_string::<Config>(&cfg.borrow())?
