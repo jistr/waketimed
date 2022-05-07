@@ -210,3 +210,13 @@ fn default_state_dir() -> String {
 fn default_dist_dir() -> String {
     "/usr/lib/waketimed".to_string()
 }
+
+#[cfg(test)]
+pub fn with_config<F>(cfg: Config, func: F)
+where
+    F: FnOnce(),
+{
+    let old_cfg = CONFIG.with(move |c| c.replace(cfg));
+    func();
+    CONFIG.with(move |c| c.replace(old_cfg));
+}

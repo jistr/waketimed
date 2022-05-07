@@ -5,6 +5,8 @@ mod dbus;
 mod engine;
 pub(crate) mod files;
 pub(crate) mod messages;
+#[cfg(test)]
+pub(crate) mod test_helpers;
 pub(crate) mod var_fns;
 pub(crate) mod var_manager;
 mod worker;

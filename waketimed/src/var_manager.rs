@@ -187,3 +187,64 @@ impl VarManager {
         self.vars.get(var_name).cloned().unwrap_or(default)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_helpers::{run_and_term_config, var_name, with_config};
+    use tokio::sync::mpsc::UnboundedReceiver;
+
+    fn create_var_manager() -> (VarManager, UnboundedReceiver<WorkerMsg>) {
+        let (worker_send, worker_recv) = tokio::sync::mpsc::unbounded_channel();
+        let mgr = VarManager::new(worker_send);
+        (mgr, worker_recv)
+    }
+
+    #[test]
+    fn test_category_vars() {
+        with_config(run_and_term_config(), || {
+            let (mut mgr, _worker_recv) = create_var_manager();
+            mgr.init().expect("Failed to init VarManager.");
+            let test_category = var_name("test_category");
+
+            // Test that category_vars map was computed correctly.
+            assert_eq!(mgr.category_vars.len(), 1);
+            let test_category_vars = mgr
+                .category_vars
+                .get(&test_category)
+                .expect("Did not find test_category in category_vars.");
+            assert_eq!(test_category_vars.len(), 1);
+            assert_eq!(
+                test_category_vars,
+                &HashSet::from([var_name("test_poll_true"),])
+            );
+
+            // Test that category vars get updated correctly.
+            mgr.update_category_vars();
+            assert_eq!(
+                mgr.vars
+                    .get(&test_category)
+                    .expect("Var test_category not found."),
+                &VarValue::Bool(false)
+            );
+            mgr.vars
+                .insert(var_name("test_poll_true"), VarValue::Bool(true));
+            mgr.update_category_vars();
+            assert_eq!(
+                mgr.vars
+                    .get(&test_category)
+                    .expect("Var test_category not found."),
+                &VarValue::Bool(true)
+            );
+            mgr.vars
+                .insert(var_name("test_poll_true"), VarValue::Bool(false));
+            mgr.update_category_vars();
+            assert_eq!(
+                mgr.vars
+                    .get(&test_category)
+                    .expect("Var test_category not found."),
+                &VarValue::Bool(false)
+            );
+        });
+    }
+}
