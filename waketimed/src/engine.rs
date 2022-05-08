@@ -1,4 +1,5 @@
 use crate::messages::{DbusMsg, EngineMsg, WorkerMsg};
+use crate::sleep_manager::SleepManager;
 use crate::var_manager::VarManager;
 use anyhow::{Context, Error as AnyError};
 use log::{debug, error, trace, warn};
@@ -10,6 +11,7 @@ pub struct Engine {
     engine_send: UnboundedSender<EngineMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
 
+    sleep_manager: SleepManager,
     state: EngineState,
     var_manager: VarManager,
 }
@@ -20,11 +22,13 @@ impl Engine {
         engine_send: UnboundedSender<EngineMsg>,
         worker_send: UnboundedSender<WorkerMsg>,
     ) -> Self {
+        let sleep_manager = SleepManager::new();
         let var_manager = VarManager::new(worker_send.clone());
         Self {
             dbus_send,
             engine_send,
             worker_send,
+            sleep_manager,
             state: EngineState::Initializing,
             var_manager,
         }
@@ -32,6 +36,7 @@ impl Engine {
 
     pub fn init(&mut self) -> Result<(), AnyError> {
         self.set_state(EngineState::Initializing);
+        self.sleep_manager.init()?;
         self.var_manager.init()?;
         self.set_state_running_maybe();
         Ok(())
@@ -108,6 +113,9 @@ impl Engine {
         self.var_manager.handle_return_var_poll(var_name, value);
         if self.var_manager.waitlist_poll_is_empty() {
             self.var_manager.update_category_vars();
+            self.sleep_manager
+                .reset_script_scope(self.var_manager.vars());
+            self.sleep_manager.compute_stayup_values();
         }
         self.set_state_running_maybe();
     }
@@ -133,6 +141,9 @@ impl Engine {
     }
 
     fn set_state(&mut self, state: EngineState) {
+        if self.state == state {
+            return;
+        }
         debug!("Engine entering state '{:?}'.", state);
         let old_state = self.state;
         self.state = state;
@@ -153,7 +164,7 @@ impl Engine {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum EngineState {
     Initializing,
     Running,

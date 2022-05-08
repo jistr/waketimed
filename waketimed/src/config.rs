@@ -76,12 +76,6 @@ impl Config {
         path
     }
 
-    pub fn rule_state_dir(&self) -> PathBuf {
-        let mut path = PathBuf::from(&self.state_dir);
-        path.push("rule_state");
-        path
-    }
-
     pub fn dist_rule_def_dir(&self) -> PathBuf {
         let mut path = PathBuf::from(&self.dist_dir);
         path.push("rule_def");
@@ -92,6 +86,10 @@ impl Config {
         let mut path = PathBuf::from(&self.dist_dir);
         path.push("var_def");
         path
+    }
+
+    pub fn rule_def_dirs(&self) -> Vec<PathBuf> {
+        vec![self.dist_rule_def_dir(), self.local_rule_def_dir()]
     }
 
     pub fn var_def_dirs(&self) -> Vec<PathBuf> {

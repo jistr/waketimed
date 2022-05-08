@@ -1,12 +1,14 @@
 use super::RuleNameError;
 use lazy_static::lazy_static;
 use regex::Regex;
+use serde_derive::{Deserialize, Serialize};
+use std::fmt;
 
 const RULE_NAME_MAX_LENGTH: usize = 80;
 const RULE_NAME_CHARSET_REGEX: &str = r"(?-u)^[a-zA-Z0-9_\.]+$";
 const RULE_NAME_PATTERN_REGEX: &str = r"(?-u)^[a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)+$";
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RuleName(String);
 
 impl TryFrom<String> for RuleName {
@@ -51,6 +53,12 @@ impl AsMut<str> for RuleName {
 impl From<RuleName> for String {
     fn from(rule_name: RuleName) -> String {
         rule_name.0
+    }
+}
+
+impl fmt::Display for RuleName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.write_str(&self.0)
     }
 }
 

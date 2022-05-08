@@ -3,13 +3,16 @@ use crate::get_config;
 use crate::messages::WorkerMsg;
 use crate::var_fns::{new_poll_var_fns, PollVarFns};
 use anyhow::{anyhow, Error as AnyError};
+use getset::Getters;
 use log::{debug, error, trace};
 use std::collections::{HashMap, HashSet};
 use tokio::sync::mpsc::UnboundedSender;
 use wtd_core::vars::{VarDef, VarKind, VarName, VarValue};
 
+#[derive(Getters)]
 pub struct VarManager {
     worker_send: UnboundedSender<WorkerMsg>,
+    #[getset(get = "pub")]
     vars: HashMap<VarName, VarValue>,
     poll_var_fns: HashMap<VarName, Box<dyn PollVarFns>>,
     var_defs: HashMap<VarName, VarDef>,
@@ -170,7 +173,7 @@ impl VarManager {
             .map(|v| {
                 #[allow(irrefutable_let_patterns)]
                 if let VarValue::Bool(b) = self.get_cloned_or(v, VarValue::Bool(false)) {
-                    trace!("Var '{}' is {}", v, b);
+                    trace!("Var '{}' is: {}.", v, b);
                     Ok(b)
                 } else {
                     Err(anyhow!(

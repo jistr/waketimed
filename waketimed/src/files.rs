@@ -5,7 +5,22 @@ use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use std::fs::{File, ReadDir};
 use std::path::{Path, PathBuf};
+use wtd_core::rules::{RuleDef, RuleName};
 use wtd_core::vars::{VarDef, VarName};
+
+pub fn load_rule_defs() -> Result<HashMap<RuleName, RuleDef>, AnyError> {
+    let rule_def_dirs = get_config().borrow().rule_def_dirs();
+    let rule_def_dirs_existing = into_existing_dirs(rule_def_dirs)?;
+    debug!("Using rule_def directories: {:?}.", &rule_def_dirs_existing);
+    let rule_def_paths = list_yaml_files_in_dirs(&rule_def_dirs_existing)?;
+    let mut rule_defs = HashMap::new();
+    for def_path in rule_def_paths.iter() {
+        debug!("Loading rule def '{}'.", def_path.display());
+        let rule_def = parse_rule_def(&def_path)?;
+        rule_defs.insert(rule_def.name().clone(), rule_def);
+    }
+    Ok(rule_defs)
+}
 
 pub fn load_var_defs() -> Result<HashMap<VarName, VarDef>, AnyError> {
     let var_def_dirs = get_config().borrow().var_def_dirs();
@@ -19,6 +34,22 @@ pub fn load_var_defs() -> Result<HashMap<VarName, VarDef>, AnyError> {
         var_defs.insert(var_def.name().clone(), var_def);
     }
     Ok(var_defs)
+}
+
+fn parse_rule_def<P: AsRef<Path>>(def_path: P) -> Result<RuleDef, AnyError> {
+    let raw_name = def_path
+        .as_ref()
+        .file_stem()
+        .and_then(|os_str| os_str.to_str())
+        .ok_or_else(|| {
+            anyhow!(
+                "Could not get rule name from path: '{}'",
+                def_path.as_ref().display()
+            )
+        })?;
+    let mut rule_def: RuleDef = parse_yaml_file(&def_path)?;
+    rule_def.name = Some(RuleName::try_from(raw_name.to_string())?);
+    Ok(rule_def)
 }
 
 fn parse_var_def<P: AsRef<Path>>(def_path: P) -> Result<VarDef, AnyError> {
