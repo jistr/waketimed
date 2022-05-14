@@ -1,8 +1,10 @@
+use crate::config::Config;
 use crate::messages::{DbusMsg, EngineMsg, WorkerMsg};
 use crate::sleep_manager::SleepManager;
 use crate::var_manager::VarManager;
 use anyhow::{Context, Error as AnyError};
 use log::{debug, error, trace, warn};
+use std::rc::Rc;
 use tokio::sync::mpsc::UnboundedSender;
 use wtd_core::vars::{VarName, VarValue};
 
@@ -18,12 +20,13 @@ pub struct Engine {
 
 impl Engine {
     pub fn new(
+        cfg: Rc<Config>,
         dbus_send: UnboundedSender<DbusMsg>,
         engine_send: UnboundedSender<EngineMsg>,
         worker_send: UnboundedSender<WorkerMsg>,
     ) -> Self {
-        let sleep_manager = SleepManager::new();
-        let var_manager = VarManager::new(worker_send.clone());
+        let sleep_manager = SleepManager::new(cfg.clone());
+        let var_manager = VarManager::new(cfg, worker_send.clone());
         Self {
             dbus_send,
             engine_send,

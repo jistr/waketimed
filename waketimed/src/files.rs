@@ -1,4 +1,4 @@
-use crate::get_config;
+use crate::config::Config;
 use anyhow::{anyhow, Context, Error as AnyError};
 use log::debug;
 use serde::de::DeserializeOwned;
@@ -8,8 +8,8 @@ use std::path::{Path, PathBuf};
 use wtd_core::rules::{RuleDef, RuleName};
 use wtd_core::vars::{VarDef, VarName};
 
-pub fn load_rule_defs() -> Result<HashMap<RuleName, RuleDef>, AnyError> {
-    let rule_def_dirs = get_config().borrow().rule_def_dirs();
+pub fn load_rule_defs(cfg: &Config) -> Result<HashMap<RuleName, RuleDef>, AnyError> {
+    let rule_def_dirs = cfg.rule_def_dirs();
     let rule_def_dirs_existing = into_existing_dirs(rule_def_dirs)?;
     debug!("Using rule_def directories: {:?}.", &rule_def_dirs_existing);
     let rule_def_paths = list_yaml_files_in_dirs(&rule_def_dirs_existing)?;
@@ -22,8 +22,8 @@ pub fn load_rule_defs() -> Result<HashMap<RuleName, RuleDef>, AnyError> {
     Ok(rule_defs)
 }
 
-pub fn load_var_defs() -> Result<HashMap<VarName, VarDef>, AnyError> {
-    let var_def_dirs = get_config().borrow().var_def_dirs();
+pub fn load_var_defs(cfg: &Config) -> Result<HashMap<VarName, VarDef>, AnyError> {
+    let var_def_dirs = cfg.var_def_dirs();
     let var_def_dirs_existing = into_existing_dirs(var_def_dirs)?;
     debug!("Using var_def directories: {:?}.", &var_def_dirs_existing);
     let var_def_paths = list_yaml_files_in_dirs(&var_def_dirs_existing)?;

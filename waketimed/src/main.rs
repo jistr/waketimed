@@ -12,25 +12,25 @@ pub(crate) mod var_fns;
 pub(crate) mod var_manager;
 mod worker;
 
+use crate::config::Config;
+use crate::engine::Engine;
+use crate::messages::{DbusMsg, EngineMsg, WorkerMsg};
 use anyhow::Error as AnyError;
-use engine::Engine;
 use log::{error, trace};
-use messages::{DbusMsg, EngineMsg, WorkerMsg};
 use signal_hook::consts::signal::{SIGINT, SIGTERM};
 use signal_hook::iterator::Signals;
+use std::rc::Rc;
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use tokio::sync::Notify;
 
-pub use crate::config::get_config;
-
 const WORKER_THREADS: usize = 3;
 
 fn main() -> Result<(), AnyError> {
-    config::load()?;
-    setup_logger();
-    config::log_config()?;
+    let cfg = config::load()?;
+    setup_logger(&cfg);
+    config::log_config(&cfg)?;
 
     let (dbus_send, dbus_recv) = unbounded_channel::<DbusMsg>();
     let (engine_send, engine_recv) = unbounded_channel::<EngineMsg>();
@@ -39,7 +39,7 @@ fn main() -> Result<(), AnyError> {
     let worker_thread = worker_thread_spawn(worker_recv, engine_send.clone());
     let dbus_thread = dbus_thread_spawn(dbus_recv, engine_send.clone());
     let signal_thread = signal_thread_spawn(engine_send.clone())?;
-    main_thread_main(engine_recv, engine_send, dbus_send, worker_send)?;
+    main_thread_main(cfg, engine_recv, engine_send, dbus_send, worker_send)?;
     trace!("Joining signal thread.");
     signal_thread.join().expect("Failed to join signal thread.");
     trace!("Joining D-Bus thread.");
@@ -52,20 +52,18 @@ fn main() -> Result<(), AnyError> {
     Ok(())
 }
 
-fn setup_logger() {
-    let cfg = get_config();
-    env_logger::builder()
-        .parse_filters(&cfg.borrow().log)
-        .init();
+fn setup_logger(cfg: &Config) {
+    env_logger::builder().parse_filters(&cfg.log).init();
 }
 
 fn main_thread_main(
+    cfg: Config,
     mut engine_recv: UnboundedReceiver<EngineMsg>,
     engine_send: UnboundedSender<EngineMsg>,
     dbus_send: UnboundedSender<DbusMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
 ) -> Result<(), AnyError> {
-    let mut engine = Engine::new(dbus_send, engine_send, worker_send);
+    let mut engine = Engine::new(Rc::new(cfg), dbus_send, engine_send, worker_send);
     engine.init()?;
     while let Some(msg) = engine_recv.blocking_recv() {
         let terminate = msg == EngineMsg::Terminate;

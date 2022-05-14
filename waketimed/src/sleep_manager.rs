@@ -1,13 +1,16 @@
+use crate::config::Config;
 use crate::files;
 use anyhow::Error as AnyError;
 use log::{error, trace};
 use rhai::{Dynamic as RhaiDynamic, Engine as RhaiEngine, Scope as RhaiScope, AST as RhaiAST};
+use std::rc::Rc;
 
 use std::collections::HashMap;
 use wtd_core::rules::{RuleDef, RuleKind, RuleName};
 use wtd_core::vars::{VarName, VarValue};
 
 pub struct SleepManager {
+    cfg: Rc<Config>,
     script_engine: RhaiEngine,
     script_scope: RhaiScope<'static>,
     stayup_defs: HashMap<RuleName, RuleDef>,
@@ -16,8 +19,9 @@ pub struct SleepManager {
 }
 
 impl SleepManager {
-    pub fn new() -> Self {
+    pub fn new(cfg: Rc<Config>) -> Self {
         Self {
+            cfg,
             script_engine: RhaiEngine::new(),
             script_scope: RhaiScope::new(),
             stayup_defs: HashMap::new(),
@@ -27,7 +31,7 @@ impl SleepManager {
     }
 
     pub fn init(&mut self) -> Result<(), AnyError> {
-        let rule_defs = files::load_rule_defs()?;
+        let rule_defs = files::load_rule_defs(&self.cfg)?;
         for (rule_name, rule_def) in rule_defs.into_iter() {
             use RuleKind::*;
             match rule_def.kind {

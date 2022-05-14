@@ -1,8 +1,6 @@
 use crate::config::Config;
 use waketimed_core::vars::VarName;
 
-pub use crate::config::with_config;
-
 pub fn default_config() -> Config {
     serde_yaml::from_str("{}").expect("Unable to create default Config.")
 }

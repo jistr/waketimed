@@ -1,15 +1,11 @@
 use anyhow::{Context, Error as AnyError};
 use log::debug;
 use serde_derive::{Deserialize, Serialize};
-use std::cell::RefCell;
+
 use std::env;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 
-thread_local! {
-    static CONFIG: Rc<RefCell<Config>> = Rc::new(RefCell::new(Config::default()));
-}
 const CONFIG_FILE_VAR: &str = "WAKETIMED_CONFIG";
 const DEFAULT_CONFIG_FILE: &str = "/etc/waketimed/config.yaml";
 
@@ -60,6 +56,7 @@ pub struct Config {
 }
 
 impl Config {
+    #[allow(dead_code)]
     pub fn state_dir(&self) -> PathBuf {
         PathBuf::from(&self.state_dir)
     }
@@ -97,7 +94,7 @@ impl Config {
     }
 }
 
-pub fn load() -> Result<(), AnyError> {
+pub fn load() -> Result<Config, AnyError> {
     let mut cfg_path_explicit = true;
     let cfg_path = env::var(CONFIG_FILE_VAR).unwrap_or_else(|_| {
         cfg_path_explicit = false;
@@ -120,19 +117,13 @@ pub fn load() -> Result<(), AnyError> {
     populate_config_from_env(&mut cfg)?;
     repair_config(&mut cfg)?;
 
-    CONFIG.with(move |c| c.replace(cfg));
-    Ok(())
+    Ok(cfg)
 }
 
-pub fn get_config() -> Rc<RefCell<Config>> {
-    CONFIG.with(|c| c.clone())
-}
-
-pub fn log_config() -> Result<(), AnyError> {
-    let cfg: Rc<RefCell<Config>> = get_config();
+pub fn log_config(cfg: &Config) -> Result<(), AnyError> {
     debug!(
         "Config settings:\n{}",
-        serde_yaml::to_string::<Config>(&cfg.borrow())?
+        serde_yaml::to_string::<Config>(cfg)?
     );
     Ok(())
 }
@@ -207,14 +198,4 @@ fn default_state_dir() -> String {
 
 fn default_dist_dir() -> String {
     "/usr/lib/waketimed".to_string()
-}
-
-#[cfg(test)]
-pub fn with_config<F>(cfg: Config, func: F)
-where
-    F: FnOnce(),
-{
-    let old_cfg = CONFIG.with(move |c| c.replace(cfg));
-    func();
-    CONFIG.with(move |c| c.replace(old_cfg));
 }
