@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use wtd_core::rules::{RuleDef, RuleKind, RuleName};
 use wtd_core::vars::{VarName, VarValue};
 
-pub struct SleepManager {
+pub struct RuleManager {
     cfg: Rc<Config>,
     script_engine: RhaiEngine,
     script_scope: RhaiScope<'static>,
@@ -18,7 +18,7 @@ pub struct SleepManager {
     stayup_values: HashMap<RuleName, bool>,
 }
 
-impl SleepManager {
+impl RuleManager {
     pub fn new(cfg: Rc<Config>) -> Self {
         Self {
             cfg,

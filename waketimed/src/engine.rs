@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::messages::{DbusMsg, EngineMsg, WorkerMsg};
-use crate::sleep_manager::SleepManager;
+use crate::rule_manager::RuleManager;
 use crate::var_manager::VarManager;
 use anyhow::{Context, Error as AnyError};
 use log::{debug, error, trace, warn};
@@ -13,7 +13,7 @@ pub struct Engine {
     engine_send: UnboundedSender<EngineMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
 
-    sleep_manager: SleepManager,
+    rule_manager: RuleManager,
     state: EngineState,
     var_manager: VarManager,
 }
@@ -25,13 +25,13 @@ impl Engine {
         engine_send: UnboundedSender<EngineMsg>,
         worker_send: UnboundedSender<WorkerMsg>,
     ) -> Self {
-        let sleep_manager = SleepManager::new(cfg.clone());
+        let rule_manager = RuleManager::new(cfg.clone());
         let var_manager = VarManager::new(cfg, worker_send.clone());
         Self {
             dbus_send,
             engine_send,
             worker_send,
-            sleep_manager,
+            rule_manager,
             state: EngineState::Initializing,
             var_manager,
         }
@@ -39,7 +39,7 @@ impl Engine {
 
     pub fn init(&mut self) -> Result<(), AnyError> {
         self.set_state(EngineState::Initializing);
-        self.sleep_manager.init()?;
+        self.rule_manager.init()?;
         self.var_manager.init()?;
         self.set_state_running_maybe();
         Ok(())
@@ -116,9 +116,9 @@ impl Engine {
         self.var_manager.handle_return_var_poll(var_name, value);
         if self.var_manager.waitlist_poll_is_empty() {
             self.var_manager.update_category_vars();
-            self.sleep_manager
+            self.rule_manager
                 .reset_script_scope(self.var_manager.vars());
-            self.sleep_manager.compute_stayup_values();
+            self.rule_manager.compute_stayup_values();
         }
         self.set_state_running_maybe();
     }
