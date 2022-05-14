@@ -91,6 +91,37 @@ impl RuleManager {
 
 #[cfg(test)]
 mod tests {
-    // TODO: add unit tests for stayup rules
-    // use crate::test_helpers::{run_and_term_config, with_config};
+    use super::*;
+    use crate::test_helpers::{rule_name, run_and_term_config, var_name};
+
+    fn create_rule_manager(cfg: Config) -> RuleManager {
+        RuleManager::new(Rc::new(cfg))
+    }
+
+    #[test]
+    fn test_stayup_rules() {
+        let mut mgr = create_rule_manager(run_and_term_config());
+        mgr.init().expect("Failed to init RuleManager.");
+
+        let mut vars: HashMap<VarName, VarValue> = HashMap::new();
+        vars.insert(var_name("test_category"), VarValue::Bool(true));
+        vars.insert(var_name("test_poll_true"), VarValue::Bool(true));
+
+        mgr.reset_script_scope(&vars);
+        mgr.compute_stayup_values();
+        assert_eq!(
+            mgr.stayup_values
+                .get(&rule_name("org.waketimed.test_stayup_bool")),
+            Some(&true)
+        );
+
+        vars.insert(var_name("test_category"), VarValue::Bool(false));
+        mgr.reset_script_scope(&vars);
+        mgr.compute_stayup_values();
+        assert_eq!(
+            mgr.stayup_values
+                .get(&rule_name("org.waketimed.test_stayup_bool")),
+            Some(&false)
+        );
+    }
 }

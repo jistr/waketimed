@@ -1,4 +1,5 @@
 use crate::config::Config;
+use waketimed_core::rules::RuleName;
 use waketimed_core::vars::VarName;
 
 pub fn default_config() -> Config {
@@ -17,6 +18,10 @@ pub fn run_and_term_config() -> Config {
     );
     cfg.poll_variable_interval = 100;
     cfg
+}
+
+pub fn rule_name(name: &str) -> RuleName {
+    RuleName::try_from(name.to_string()).expect("Invalid RuleName")
 }
 
 pub fn var_name(name: &str) -> VarName {
