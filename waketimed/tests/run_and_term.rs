@@ -22,7 +22,7 @@ fn test_run_and_term() -> Result<(), AnyError> {
         "var_manager] Var 'test_inactive' is inactive, forgetting it.",
     ])?;
     supervisor.wait_for_stderr("CategoryAny var 'test_category' is: true")?;
-    supervisor.wait_for_stderr("Stayup rule 'org.waketimed.test_stayup_bool' is: true.")?;
+    supervisor.wait_for_stderr("Stayup rule 'test_stayup_bool' is: true.")?;
     supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
     supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;
     supervisor.wait_for_stderr("Received EngineMsg::ReturnVarPoll")?;

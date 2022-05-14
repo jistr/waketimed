@@ -110,8 +110,7 @@ mod tests {
         mgr.reset_script_scope(&vars);
         mgr.compute_stayup_values();
         assert_eq!(
-            mgr.stayup_values
-                .get(&rule_name("org.waketimed.test_stayup_bool")),
+            mgr.stayup_values.get(&rule_name("test_stayup_bool")),
             Some(&true)
         );
 
@@ -119,8 +118,7 @@ mod tests {
         mgr.reset_script_scope(&vars);
         mgr.compute_stayup_values();
         assert_eq!(
-            mgr.stayup_values
-                .get(&rule_name("org.waketimed.test_stayup_bool")),
+            mgr.stayup_values.get(&rule_name("test_stayup_bool")),
             Some(&false)
         );
     }

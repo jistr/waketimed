@@ -6,7 +6,7 @@ use std::fmt;
 
 const VAR_NAME_MAX_LENGTH: usize = 40;
 const VAR_NAME_CHARSET_REGEX: &str = r"(?-u)^[a-z0-9_]+$";
-const VAR_NAME_PATTERN_REGEX: &str = r"(?-u)^[a-z0-9]+(?:_[a-z0-9]+)*$";
+const VAR_NAME_PATTERN_REGEX: &str = r"(?-u)^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$";
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VarName(String);
@@ -67,10 +67,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_var_name_valid() -> Result<(), VarNameError> {
+    fn test_var_name_valid() {
         let name = "wtd_display_on".to_string();
-        let _rn: VarName = name.try_into()?;
-        Ok(())
+        assert!(VarName::try_from(name).is_ok());
+        let name = "abc9".to_string();
+        assert!(VarName::try_from(name).is_ok());
     }
 
     #[test]
@@ -78,6 +79,8 @@ mod tests {
         let name = "".to_string(); // empty
         assert!(VarName::try_from(name).is_err());
         let name = "x".repeat(60); // too long
+        assert!(VarName::try_from(name).is_err());
+        let name = "a_b_c-d".to_string(); // contains '-'
         assert!(VarName::try_from(name).is_err());
         let name = "a_b.c".to_string(); // contains '.'
         assert!(VarName::try_from(name).is_err());
@@ -88,6 +91,8 @@ mod tests {
         let name = "_abc".to_string(); // starts with an underscore
         assert!(VarName::try_from(name).is_err());
         let name = "abc_".to_string(); // ends with an underscore
+        assert!(VarName::try_from(name).is_err());
+        let name = "9abc".to_string(); // starts with a number
         assert!(VarName::try_from(name).is_err());
     }
 }

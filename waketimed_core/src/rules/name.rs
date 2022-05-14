@@ -5,8 +5,8 @@ use serde_derive::{Deserialize, Serialize};
 use std::fmt;
 
 const RULE_NAME_MAX_LENGTH: usize = 80;
-const RULE_NAME_CHARSET_REGEX: &str = r"(?-u)^[a-zA-Z0-9_\.]+$";
-const RULE_NAME_PATTERN_REGEX: &str = r"(?-u)^[a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)+$";
+const RULE_NAME_CHARSET_REGEX: &str = r"(?-u)^[a-z0-9_]+$";
+const RULE_NAME_PATTERN_REGEX: &str = r"(?-u)^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$";
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RuleName(String);
@@ -67,11 +67,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_rule_name_valid() -> Result<(), RuleNameError> {
-        let name =
-            "org.waketimed.test_rule.UUID_length_and_more_lorem_ipsum_dolor_sit_amet".to_string();
-        let _rn: RuleName = name.try_into()?;
-        Ok(())
+    fn test_rule_name_valid() {
+        let name = "wtd_display_on".to_string();
+        assert!(RuleName::try_from(name).is_ok());
+        let name = "abc9".to_string();
+        assert!(RuleName::try_from(name).is_ok());
     }
 
     #[test]
@@ -80,15 +80,21 @@ mod tests {
         assert!(RuleName::try_from(name).is_err());
         let name = "X".repeat(81); // too long
         assert!(RuleName::try_from(name).is_err());
-        let name = "a.b.c-d".to_string(); // contains '-'
+        let name = "a_b_c-d".to_string(); // contains '-'
         assert!(RuleName::try_from(name).is_err());
-        let name = "a.b.č".to_string(); // contains 'č'
+        let name = "a_b.c".to_string(); // contains '.'
         assert!(RuleName::try_from(name).is_err());
-        let name = "a..b.c".to_string(); // consecutive periods
+        let name = "abč".to_string(); // contains 'č'
         assert!(RuleName::try_from(name).is_err());
-        let name = ".a.b.c".to_string(); // starts with a period
+        let name = "a__bc".to_string(); // consecutive underscores
         assert!(RuleName::try_from(name).is_err());
-        let name = "a.b.c.".to_string(); // ends with a period
+        let name = "_abc".to_string(); // starts with an underscore
         assert!(RuleName::try_from(name).is_err());
+        let name = "abc_".to_string(); // ends with an underscore
+        assert!(RuleName::try_from(name).is_err());
+        let name = "9abc".to_string(); // starts with a number
+        assert!(RuleName::try_from(name).is_err());
+        let name = "abc9".to_string(); // ends with a number - ok
+        assert!(RuleName::try_from(name).is_ok());
     }
 }
