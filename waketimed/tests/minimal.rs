@@ -26,14 +26,12 @@ fn test_minimal() -> Result<(), AnyError> {
     let wtd_proc = cmd.spawn().context("Failed to spawn waketimed process.")?;
     let mut supervisor = helpers::Supervisor::new(wtd_proc);
     supervisor.wait_for_stderr_unordered(&[
-        "waketimed] Starting D-Bus thread.",
         "waketimed] Starting signal thread.",
         "waketimed] Starting worker thread.",
         "engine] Engine entering state 'Running'.",
     ])?;
     supervisor.terminate()?;
     supervisor.wait_for_stderr_unordered(&[
-        "waketimed] Joining D-Bus thread.",
         "waketimed] Joining signal thread.",
         "waketimed] Joining worker thread.",
     ])?;

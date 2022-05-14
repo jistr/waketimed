@@ -12,7 +12,6 @@ fn test_run_and_term() -> Result<(), AnyError> {
     let wtd_proc = cmd.spawn().context("Failed to spawn waketimed process.")?;
     let mut supervisor = helpers::Supervisor::new(wtd_proc);
     supervisor.wait_for_stderr_unordered(&[
-        "waketimed] Starting D-Bus thread.",
         "waketimed] Starting signal thread.",
         "waketimed] Starting worker thread.",
         "Using var_def directories: [\"tests/data/run_and_term/dist/var_def\", \"tests/data/run_and_term/state/var_def\"].",
@@ -30,7 +29,6 @@ fn test_run_and_term() -> Result<(), AnyError> {
     supervisor.wait_for_stderr("Received EngineMsg::ReturnVarPoll")?;
     supervisor.terminate()?;
     supervisor.wait_for_stderr_unordered(&[
-        "waketimed] Joining D-Bus thread.",
         "waketimed] Joining signal thread.",
         "waketimed] Joining worker thread.",
     ])?;

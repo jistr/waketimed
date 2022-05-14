@@ -5,7 +5,7 @@ pub enum RuleError {
     #[error("Rule parameter '{0}' is missing.")]
     ParamMissing(String),
     #[error("Rule parameter '{0}' is of incorrect data type.")]
-    IncorrectParamType(String, #[source] zvariant::Error),
+    IncorrectParamType(String, #[source] serde_yaml::Error),
     #[error("Incorrect rule name.")]
     IncorrectName(#[source] RuleNameError),
 }

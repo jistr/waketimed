@@ -59,9 +59,9 @@ fix-fmt:
 
 # TEST
 
-test: test-waketimed_core test-waketimed test-waketimectl
+test: test-waketimed_core test-waketimed
 
-test-unit: test-unit-waketimed_core test-unit-waketimed test-unit-waketimectl
+test-unit: test-unit-waketimed_core test-unit-waketimed
 
 test-int: test-int-waketimed
 
@@ -78,10 +78,6 @@ test-waketimed_core: test-unit-waketimed_core
 test-unit-waketimed_core:
 	cd waketimed_core && cargo test --lib
 
-test-waketimectl: test-unit-waketimectl
-
-test-unit-waketimectl:
-	cd waketimectl && cargo test --bins
 
 # TOOLBOX
 

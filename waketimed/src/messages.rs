@@ -2,11 +2,6 @@ use std::fmt;
 use wtd_core::vars::{VarName, VarValue};
 
 #[derive(Debug, PartialEq)]
-pub enum DbusMsg {
-    Terminate,
-}
-
-#[derive(Debug, PartialEq)]
 pub enum EngineMsg {
     PollVarsTick,
     ReturnVarIsActive(VarName, bool),

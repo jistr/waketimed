@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::messages::{DbusMsg, EngineMsg, WorkerMsg};
+use crate::messages::{EngineMsg, WorkerMsg};
 use crate::rule_manager::RuleManager;
 use crate::var_manager::VarManager;
 use anyhow::{Context, Error as AnyError};
@@ -9,7 +9,6 @@ use tokio::sync::mpsc::UnboundedSender;
 use wtd_core::vars::{VarName, VarValue};
 
 pub struct Engine {
-    dbus_send: UnboundedSender<DbusMsg>,
     engine_send: UnboundedSender<EngineMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
 
@@ -21,14 +20,12 @@ pub struct Engine {
 impl Engine {
     pub fn new(
         cfg: Rc<Config>,
-        dbus_send: UnboundedSender<DbusMsg>,
         engine_send: UnboundedSender<EngineMsg>,
         worker_send: UnboundedSender<WorkerMsg>,
     ) -> Self {
         let rule_manager = RuleManager::new(cfg.clone());
         let var_manager = VarManager::new(cfg, worker_send.clone());
         Self {
-            dbus_send,
             engine_send,
             worker_send,
             rule_manager,
@@ -98,9 +95,6 @@ impl Engine {
 
     fn handle_terminate(&mut self) {
         self.set_state(EngineState::Terminating);
-        self.dbus_send
-            .send(DbusMsg::Terminate)
-            .expect("Failed to send DbusMsg::Terminate");
         self.worker_send
             .send(WorkerMsg::Terminate)
             .expect("Failed to send WorkerMsg::Terminate");

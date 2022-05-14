@@ -1,7 +1,6 @@
 extern crate waketimed_core as wtd_core;
 
 mod config;
-mod dbus;
 mod engine;
 pub(crate) mod files;
 pub(crate) mod messages;
@@ -14,16 +13,15 @@ mod worker;
 
 use crate::config::Config;
 use crate::engine::Engine;
-use crate::messages::{DbusMsg, EngineMsg, WorkerMsg};
+use crate::messages::{EngineMsg, WorkerMsg};
 use anyhow::Error as AnyError;
 use log::{error, trace};
 use signal_hook::consts::signal::{SIGINT, SIGTERM};
 use signal_hook::iterator::Signals;
 use std::rc::Rc;
-use std::sync::Arc;
+
 use std::thread::{self, JoinHandle};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
-use tokio::sync::Notify;
 
 const WORKER_THREADS: usize = 3;
 
@@ -32,18 +30,14 @@ fn main() -> Result<(), AnyError> {
     setup_logger(&cfg);
     config::log_config(&cfg)?;
 
-    let (dbus_send, dbus_recv) = unbounded_channel::<DbusMsg>();
     let (engine_send, engine_recv) = unbounded_channel::<EngineMsg>();
     let (worker_send, worker_recv) = unbounded_channel::<WorkerMsg>();
 
     let worker_thread = worker_thread_spawn(worker_recv, engine_send.clone());
-    let dbus_thread = dbus_thread_spawn(dbus_recv, engine_send.clone());
     let signal_thread = signal_thread_spawn(engine_send.clone())?;
-    main_thread_main(cfg, engine_recv, engine_send, dbus_send, worker_send)?;
+    main_thread_main(cfg, engine_recv, engine_send, worker_send)?;
     trace!("Joining signal thread.");
     signal_thread.join().expect("Failed to join signal thread.");
-    trace!("Joining D-Bus thread.");
-    dbus_thread.join().expect("Failed to join D-Bus thread.")?;
     trace!("Joining worker thread.");
     worker_thread
         .join()
@@ -60,10 +54,9 @@ fn main_thread_main(
     cfg: Config,
     mut engine_recv: UnboundedReceiver<EngineMsg>,
     engine_send: UnboundedSender<EngineMsg>,
-    dbus_send: UnboundedSender<DbusMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
 ) -> Result<(), AnyError> {
-    let mut engine = Engine::new(Rc::new(cfg), dbus_send, engine_send, worker_send);
+    let mut engine = Engine::new(Rc::new(cfg), engine_send, worker_send);
     engine.init()?;
     while let Some(msg) = engine_recv.blocking_recv() {
         let terminate = msg == EngineMsg::Terminate;
@@ -73,35 +66,6 @@ fn main_thread_main(
         }
     }
     trace!("Exiting main thread loop.");
-    Ok(())
-}
-
-fn dbus_thread_spawn(
-    dbus_recv: UnboundedReceiver<DbusMsg>,
-    engine_send: UnboundedSender<EngineMsg>,
-) -> JoinHandle<Result<(), AnyError>> {
-    thread::Builder::new()
-        .name("dbus".to_string())
-        .spawn(move || {
-            let runtime = tokio::runtime::Builder::new_current_thread()
-                .enable_io()
-                .enable_time()
-                .build()?;
-            runtime.block_on(dbus_thread_main(dbus_recv, engine_send))
-        })
-        .expect("Failed to spawn D-Bus thread.")
-}
-
-async fn dbus_thread_main(
-    dbus_recv: UnboundedReceiver<DbusMsg>,
-    engine_send: UnboundedSender<EngineMsg>,
-) -> Result<(), AnyError> {
-    trace!("Starting D-Bus thread.");
-    let terminate_notify = Arc::new(Notify::new());
-    let conn = dbus::server::spawn_dbus_server_and_get_conn(engine_send).await?;
-    dbus::server::spawn_recv_loop(conn, dbus_recv, terminate_notify.clone()).await?;
-    terminate_notify.notified().await;
-    trace!("Terminating D-Bus thread.");
     Ok(())
 }
 

@@ -1,5 +1,5 @@
 [workspace]
-members = ['waketimed_core', 'waketimed', 'waketimectl']
+members = ['waketimed_core', 'waketimed']
 
 [profile.release]
 # optimize binary size
