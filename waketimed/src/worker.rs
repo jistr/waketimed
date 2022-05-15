@@ -1,6 +1,7 @@
 use crate::messages::{EngineMsg, WorkerMsg};
 use anyhow::{Context, Error as AnyError};
 use log::{error, trace};
+use tokio::runtime::Handle as TokioHandle;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::task::JoinHandle;
 use tokio::time::{self, Duration};
@@ -48,12 +49,15 @@ impl Worker {
     async fn handle_call_var_poll(
         &mut self,
         var_name: VarName,
-        poll_fn: Box<dyn FnOnce() -> VarValue + Send + Sync>,
+        poll_fn: Box<dyn FnOnce(&TokioHandle) -> VarValue + Send + Sync>,
     ) {
         // TODO: For now this will block one of the worker threads. It
         // should be investigated if poll_fn can be async.
         self.engine_send
-            .send(EngineMsg::ReturnVarPoll(var_name, poll_fn()))
+            .send(EngineMsg::ReturnVarPoll(
+                var_name,
+                poll_fn(&TokioHandle::current()),
+            ))
             .context("Could not send EngineMsg::ReturnVarIsActive")
             .unwrap_or_else(|e| error!("{:?}", e));
     }

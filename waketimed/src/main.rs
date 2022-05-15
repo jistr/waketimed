@@ -7,6 +7,7 @@ pub(crate) mod messages;
 pub(crate) mod rule_manager;
 #[cfg(test)]
 pub(crate) mod test_helpers;
+pub(crate) mod var_creation_context;
 pub(crate) mod var_fns;
 pub(crate) mod var_manager;
 mod worker;
@@ -56,7 +57,7 @@ fn main_thread_main(
     engine_send: UnboundedSender<EngineMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
 ) -> Result<(), AnyError> {
-    let mut engine = Engine::new(Rc::new(cfg), engine_send, worker_send);
+    let mut engine = Engine::new(Rc::new(cfg), engine_send, worker_send)?;
     engine.init()?;
     while let Some(msg) = engine_recv.blocking_recv() {
         let terminate = msg == EngineMsg::Terminate;

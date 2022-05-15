@@ -22,16 +22,16 @@ impl Engine {
         cfg: Rc<Config>,
         engine_send: UnboundedSender<EngineMsg>,
         worker_send: UnboundedSender<WorkerMsg>,
-    ) -> Self {
+    ) -> Result<Self, AnyError> {
         let rule_manager = RuleManager::new(cfg.clone());
-        let var_manager = VarManager::new(cfg, worker_send.clone());
-        Self {
+        let var_manager = VarManager::new(cfg, worker_send.clone())?;
+        Ok(Self {
             engine_send,
             worker_send,
             rule_manager,
             state: EngineState::Initializing,
             var_manager,
-        }
+        })
     }
 
     pub fn init(&mut self) -> Result<(), AnyError> {

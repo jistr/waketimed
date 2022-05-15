@@ -1,4 +1,5 @@
 use std::fmt;
+use tokio::runtime::Handle as TokioHandle;
 use wtd_core::vars::{VarName, VarValue};
 
 #[derive(Debug, PartialEq)]
@@ -11,7 +12,10 @@ pub enum EngineMsg {
 
 pub enum WorkerMsg {
     CallVarIsActive(VarName, Box<dyn FnOnce() -> bool + Send + Sync>),
-    CallVarPoll(VarName, Box<dyn FnOnce() -> VarValue + Send + Sync>),
+    CallVarPoll(
+        VarName,
+        Box<dyn FnOnce(&TokioHandle) -> VarValue + Send + Sync>,
+    ),
     SpawnPollVarInterval(u64),
     Terminate,
 }

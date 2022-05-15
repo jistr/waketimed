@@ -1,4 +1,6 @@
+use crate::var_creation_context::VarCreationContext;
 use anyhow::{anyhow, Error as AnyError};
+use tokio::runtime::Handle as TokioHandle;
 use wtd_core::vars::{BuiltinPollDef, VarDef, VarKind, VarValue};
 
 pub mod poll;
@@ -15,15 +17,19 @@ pub trait PollVarFns {
     // Poll current value of the variable. Used for updating variable
     // values in runtime variable map.
     // TODO: Can/should the returned function be async (return Future)?
-    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValue + Send + Sync>;
+    fn poll_fn(&self) -> Box<dyn FnOnce(&TokioHandle) -> VarValue + Send + Sync>;
 }
 
-pub fn new_poll_var_fns(var_def: &VarDef) -> Result<Option<Box<dyn PollVarFns>>, AnyError> {
+pub fn new_poll_var_fns(
+    var_def: &VarDef,
+    context: &VarCreationContext,
+) -> Result<Option<Box<dyn PollVarFns>>, AnyError> {
     let kind = &var_def.kind;
     match kind {
         VarKind::BuiltinPoll(def) => Ok(Some(new_builtin_poll_var_fns(
             var_def.name().as_ref(),
             def,
+            context,
         )?)),
         _ => Ok(None),
     }
@@ -32,8 +38,12 @@ pub fn new_poll_var_fns(var_def: &VarDef) -> Result<Option<Box<dyn PollVarFns>>,
 fn new_builtin_poll_var_fns(
     name: &str,
     bp_def: &BuiltinPollDef,
+    context: &VarCreationContext,
 ) -> Result<Box<dyn PollVarFns>, AnyError> {
     match bp_def.builtin_name.as_str() {
+        "login_session_busy" => Ok(Box::new(
+            poll::login_session_busy::LoginSessionBusyFns::new(&bp_def.params, context)?,
+        )),
         "test_poll_bool" => Ok(Box::new(poll::test_poll_bool::TestPollBoolFns::new(
             &bp_def.params,
         )?)),

@@ -1,6 +1,7 @@
 use crate::config::Config;
 use crate::files;
 use crate::messages::WorkerMsg;
+use crate::var_creation_context::VarCreationContext;
 use crate::var_fns::{new_poll_var_fns, PollVarFns};
 use anyhow::{anyhow, Error as AnyError};
 use getset::Getters;
@@ -21,11 +22,12 @@ pub struct VarManager {
     category_vars: HashMap<VarName, HashSet<VarName>>,
     waitlist_active: HashSet<VarName>,
     waitlist_poll: HashSet<VarName>,
+    var_creation_context: VarCreationContext,
 }
 
 impl VarManager {
-    pub fn new(cfg: Rc<Config>, worker_send: UnboundedSender<WorkerMsg>) -> Self {
-        Self {
+    pub fn new(cfg: Rc<Config>, worker_send: UnboundedSender<WorkerMsg>) -> Result<Self, AnyError> {
+        Ok(Self {
             cfg,
             worker_send,
             vars: HashMap::new(),
@@ -34,7 +36,8 @@ impl VarManager {
             category_vars: HashMap::new(),
             waitlist_active: HashSet::new(),
             waitlist_poll: HashSet::new(),
-        }
+            var_creation_context: VarCreationContext::new()?,
+        })
     }
 
     pub fn init(&mut self) -> Result<(), AnyError> {
@@ -127,7 +130,7 @@ impl VarManager {
     fn load_poll_var_fns(&mut self) -> Result<(), AnyError> {
         self.poll_var_fns = HashMap::new();
         for var_def in self.var_defs.values() {
-            if let Some(var_fns) = new_poll_var_fns(var_def)? {
+            if let Some(var_fns) = new_poll_var_fns(var_def, &self.var_creation_context)? {
                 self.poll_var_fns.insert(var_def.name().clone(), var_fns);
             }
         }
@@ -202,7 +205,7 @@ mod tests {
 
     fn create_var_manager(cfg: Config) -> (VarManager, UnboundedReceiver<WorkerMsg>) {
         let (worker_send, worker_recv) = tokio::sync::mpsc::unbounded_channel();
-        let mgr = VarManager::new(Rc::new(cfg), worker_send);
+        let mgr = VarManager::new(Rc::new(cfg), worker_send).expect("Failed to create VarManager.");
         (mgr, worker_recv)
     }
 

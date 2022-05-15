@@ -1,7 +1,8 @@
 use crate::var_fns::PollVarFns;
+use tokio::runtime::Handle as TokioHandle;
 use wtd_core::vars::VarValue;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct TestInactiveFns {}
 
 impl TestInactiveFns {
@@ -16,7 +17,7 @@ impl PollVarFns for TestInactiveFns {
         Box::new(move || false)
     }
 
-    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValue + Send + Sync> {
-        Box::new(move || VarValue::Bool(false))
+    fn poll_fn(&self) -> Box<dyn FnOnce(&TokioHandle) -> VarValue + Send + Sync> {
+        Box::new(move |_| VarValue::Bool(false))
     }
 }
