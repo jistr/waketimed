@@ -1,23 +1,24 @@
 use crate::var_creation_context::VarCreationContext;
 use anyhow::{anyhow, Error as AnyError};
-use tokio::runtime::Handle as TokioHandle;
+
 use wtd_core::vars::{BuiltinPollDef, VarDef, VarKind, VarValue};
 
 pub mod poll;
 
-// #[async_trait]
 pub trait PollVarFns {
     /// Check whether the variable is "relevant" to the host. This is
     /// run when waketimed starts. Active variables are stored in the
     /// runtime variable map and they get polled every poll cycle for
     /// current value. Inactive variables are never polled, and do not
     /// get stored in the runtime variable map.
-    // TODO: Can/should the returned function be async (return Future)?
+    // FIXME: The returned function should be async when Rust supports
+    // async closures.
     fn is_active_fn(&self) -> Box<dyn FnOnce() -> bool + Send + Sync>;
-    // Poll current value of the variable. Used for updating variable
-    // values in runtime variable map.
-    // TODO: Can/should the returned function be async (return Future)?
-    fn poll_fn(&self) -> Box<dyn FnOnce(&TokioHandle) -> VarValue + Send + Sync>;
+    /// Poll current value of the variable. Used for updating variable
+    /// values in runtime variable map.
+    // FIXME: The returned function should be async when Rust supports
+    // async closures.
+    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValue + Send + Sync>;
 }
 
 pub fn new_poll_var_fns(

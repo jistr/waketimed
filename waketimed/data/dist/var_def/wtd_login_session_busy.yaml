@@ -1,0 +1,6 @@
+data_type: bool
+categories:
+  - wtd_user_busy
+kind:
+  builtin_poll:
+    builtin_name: login_session_busy

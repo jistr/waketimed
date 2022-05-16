@@ -4,12 +4,13 @@ use anyhow::Error as AnyError;
 use log::error;
 use serde_yaml::Value;
 use std::collections::HashMap;
-use tokio::runtime::Handle as TokioHandle;
+use std::thread;
 use wtd_core::vars::VarValue;
+use zbus::blocking::Connection as ZbusConnection;
 
 #[derive(Clone, Debug)]
 pub struct LoginSessionBusyFns {
-    system_dbus_conn: zbus::Connection,
+    system_dbus_conn: ZbusConnection,
 }
 
 impl LoginSessionBusyFns {
@@ -28,16 +29,24 @@ impl PollVarFns for LoginSessionBusyFns {
         Box::new(move || true)
     }
 
-    fn poll_fn(&self) -> Box<dyn FnOnce(&TokioHandle) -> VarValue + Send + Sync> {
+    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValue + Send + Sync> {
         let system_dbus_conn = self.system_dbus_conn.clone();
-        Box::new(move |async_rt| {
-            let idle_hint_res = async_rt.block_on(system_dbus_conn.call_method(
-                Some("org.freedesktop.login1"),
-                "/org/freedesktop/login1/session/auto",
-                Some("org.freedesktop.DBus.Properties"),
-                "Get",
-                &["org.freedesktop.login1.Session", "IdleHint"],
-            ));
+        Box::new(move || {
+            // FIXME: We need a per-request thread to prevent tokio
+            // erroring out on runtime-in-runtime nesting. When Rust
+            // supports async closures, the PollVarFns trait functions
+            // should be returning async FnOnce.
+            let idle_hint_res = thread::spawn(move || {
+                system_dbus_conn.call_method(
+                    Some("org.freedesktop.login1"),
+                    "/org/freedesktop/login1/session/auto",
+                    Some("org.freedesktop.DBus.Properties"),
+                    "Get",
+                    &["org.freedesktop.login1.Session", "IdleHint"],
+                )
+            })
+            .join()
+            .expect("Failed to join D-Bus call thread.");
             if idle_hint_res.is_err() {
                 error!(
                     "Failed to fetch login session IdleHint: {:?}",

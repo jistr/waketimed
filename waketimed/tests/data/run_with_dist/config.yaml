@@ -1,0 +1,4 @@
+log: waketimed=trace
+state_dir: tests/data/run_with_dist/state
+dist_dir: data/dist
+poll_variable_interval: 100

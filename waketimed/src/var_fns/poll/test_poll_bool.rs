@@ -2,7 +2,6 @@ use crate::var_fns::PollVarFns;
 use anyhow::Error as AnyError;
 use serde_yaml::Value;
 use std::collections::HashMap;
-use tokio::runtime::Handle as TokioHandle;
 use wtd_core::vars::{param_required, VarValue};
 
 #[derive(Clone, Debug)]
@@ -23,8 +22,8 @@ impl PollVarFns for TestPollBoolFns {
         Box::new(move || true)
     }
 
-    fn poll_fn(&self) -> Box<dyn FnOnce(&TokioHandle) -> VarValue + Send + Sync> {
+    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValue + Send + Sync> {
         let value = self.return_value;
-        Box::new(move |_| VarValue::Bool(value))
+        Box::new(move || VarValue::Bool(value))
     }
 }

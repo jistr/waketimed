@@ -72,6 +72,7 @@ $CONTAINER_MGR run \
        --rm \
        --privileged \
        --tmpfs "$HOME" \
+       -v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket \
        -v "$PROJECT_DIR/tmp/cargo:$HOME/.cargo:z" \
        -v "$PROJECT_DIR:$HOME/waketimed:z" \
        -e "HOME=$HOME" \
