@@ -1,7 +1,7 @@
 use crate::var_creation_context::VarCreationContext;
 use crate::var_fns::PollVarFns;
 use anyhow::Error as AnyError;
-use log::error;
+use log::warn;
 use serde_yaml::Value;
 use std::collections::HashMap;
 use std::thread;
@@ -48,7 +48,7 @@ impl PollVarFns for LoginSessionBusyFns {
             .join()
             .expect("Failed to join D-Bus call thread.");
             if idle_hint_res.is_err() {
-                error!(
+                warn!(
                     "Failed to fetch login session IdleHint: {:?}",
                     idle_hint_res
                 );
@@ -58,14 +58,14 @@ impl PollVarFns for LoginSessionBusyFns {
             let idle_hint_var: zvariant::Value = match idle_hint_msg.body() {
                 Ok(body) => body,
                 Err(e) => {
-                    error!("Failed to fetch login session IdleHint: {:?}", e);
+                    warn!("Failed to fetch login session IdleHint: {:?}", e);
                     return VarValue::Bool(true);
                 }
             };
             if let zvariant::Value::Bool(idle_hint) = idle_hint_var {
                 VarValue::Bool(!idle_hint)
             } else {
-                error!(
+                warn!(
                     "Failed to fetch login session IdleHint - wrong data type: {:?}",
                     idle_hint_var,
                 );
