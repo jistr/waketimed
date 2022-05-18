@@ -1,0 +1,4 @@
+FROM docker.io/library/debian:testing
+ADD src_cross /src_cross
+RUN bash /src_cross/build.sh
+WORKDIR /

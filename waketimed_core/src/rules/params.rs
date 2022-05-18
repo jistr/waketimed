@@ -18,7 +18,8 @@ pub fn param_required_value(
     params
         .get(key)
         .ok_or_else(|| RuleError::ParamMissing(key.to_string()))
-        .cloned()
+        // TODO: replace with .cloned() when Debian testing compiler supports it
+        .map(|value| value.clone())
 }
 
 #[cfg(test)]

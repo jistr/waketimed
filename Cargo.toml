@@ -3,7 +3,8 @@ members = ['waketimed_core', 'waketimed']
 
 [profile.release]
 # optimize binary size
-strip = true
+# TODO: re-enable strip + opt-level when Debian testing compiler supports them
+# strip = true
 lto = true
-opt-level = "z"
+# opt-level = "z"
 codegen-units = 1

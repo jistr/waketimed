@@ -18,6 +18,11 @@ build-debug: build
 build-release: WAKETIMED_BUILD_PROFILE = --release
 build-release: build
 
+build-release-aarch64: export PKG_CONFIG_ALLOW_CROSS = 1
+build-release-aarch64: WAKETIMED_BUILD_PROFILE = --release --target aarch64-unknown-linux-gnu
+build-release-aarch64: cross-prep-cargo build
+
+
 clean:
 	cargo clean
 
@@ -88,3 +93,17 @@ toolbox-build:
 
 toolbox-clean:
 	$(CONTAINER_MGR) rmi localhost/waketimed_toolbox_builder:latest || true
+
+cross-toolbox-build:
+	cd toolbox && \
+	$(CONTAINER_MGR) build --no-cache -f Containerfile_cross -t localhost/waketimed_toolbox_cross:latest . && \
+	$(CONTAINER_MGR) tag localhost/waketimed_toolbox_cross:latest localhost/waketimed_toolbox_cross:$$(date "+%Y_%m_%d")
+
+cross-toolbox-clean:
+	$(CONTAINER_MGR) rmi localhost/waketimed_toolbox_cross:latest || true
+
+cross-prep-cargo:
+	if ! grep /usr/bin/aarch64-linux-gnu-gcc tmp/cargo/config &> /dev/null; then \
+		echo '[target.aarch64-unknown-linux-gnu]' >>tmp/cargo/config; \
+		echo 'linker = "/usr/bin/aarch64-linux-gnu-gcc"' >>tmp/cargo/config; \
+	fi

@@ -15,7 +15,8 @@ pub fn param_required_value(params: &HashMap<String, Value>, key: &str) -> Resul
     params
         .get(key)
         .ok_or_else(|| VarError::ParamMissing(key.to_string()))
-        .cloned()
+        // TODO: replace with .cloned() when Debian testing compiler supports it
+        .map(|value| value.clone())
 }
 
 #[cfg(test)]
