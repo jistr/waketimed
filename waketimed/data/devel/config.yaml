@@ -1,0 +1,3 @@
+log: waketimed=trace
+state_dir: /opt/waketimed-devel/var
+dist_dir: /opt/waketimed-devel/lib

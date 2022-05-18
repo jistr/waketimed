@@ -1,0 +1,13 @@
+[Unit]
+Description=Development version of waketimed
+
+[Service]
+Type=simple
+OOMScoreAdjust=-500
+
+# ProtectSystem=strict
+# ReadWritePaths=/opt/waketimed-devel/var
+# PrivateTmp=true
+
+Environment=WAKETIMED_CONFIG=/opt/waketimed-devel/etc/config.yaml
+ExecStart=/opt/waketimed-devel/bin/waketimed
