@@ -1,10 +1,12 @@
 use crate::messages::{EngineMsg, WorkerMsg};
+use crate::var_fns::{BoolFuture, VarValueFuture};
 use anyhow::{Context, Error as AnyError};
 use log::{error, trace};
+
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::task::JoinHandle;
 use tokio::time::{self, Duration};
-use wtd_core::vars::{VarName, VarValue};
+use wtd_core::vars::VarName;
 
 pub struct Worker {
     engine_send: UnboundedSender<EngineMsg>,
@@ -35,12 +37,10 @@ impl Worker {
     async fn handle_call_var_is_active(
         &mut self,
         var_name: VarName,
-        is_active_fn: Box<dyn FnOnce() -> bool + Send + Sync>,
+        is_active_fn: Box<dyn FnOnce() -> BoolFuture + Send + Sync>,
     ) {
-        // TODO: For now this will block one of the worker threads. It
-        // should be investigated if is_active_fn can be async.
         self.engine_send
-            .send(EngineMsg::ReturnVarIsActive(var_name, is_active_fn()))
+            .send(EngineMsg::ReturnVarIsActive(var_name, is_active_fn().await))
             .context("Could not send EngineMsg::ReturnVarIsActive")
             .unwrap_or_else(|e| error!("{:?}", e));
     }
@@ -48,12 +48,10 @@ impl Worker {
     async fn handle_call_var_poll(
         &mut self,
         var_name: VarName,
-        poll_fn: Box<dyn FnOnce() -> VarValue + Send + Sync>,
+        poll_fn: Box<dyn FnOnce() -> VarValueFuture + Send + Sync>,
     ) {
-        // TODO: For now this will block one of the worker threads. It
-        // should be investigated if poll_fn can be async.
         self.engine_send
-            .send(EngineMsg::ReturnVarPoll(var_name, poll_fn()))
+            .send(EngineMsg::ReturnVarPoll(var_name, poll_fn().await))
             .context("Could not send EngineMsg::ReturnVarIsActive")
             .unwrap_or_else(|e| error!("{:?}", e));
     }

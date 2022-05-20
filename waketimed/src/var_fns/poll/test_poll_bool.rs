@@ -1,7 +1,8 @@
-use crate::var_fns::PollVarFns;
+use crate::var_fns::{BoolFuture, PollVarFns, VarValueFuture};
 use anyhow::Error as AnyError;
 use serde_yaml::Value;
 use std::collections::HashMap;
+
 use wtd_core::vars::{param_required, VarValue};
 
 #[derive(Clone, Debug)]
@@ -16,14 +17,13 @@ impl TestPollBoolFns {
     }
 }
 
-// #[async_trait]
 impl PollVarFns for TestPollBoolFns {
-    fn is_active_fn(&self) -> Box<dyn FnOnce() -> bool + Send + Sync> {
-        Box::new(move || true)
+    fn is_active_fn(&self) -> Box<dyn FnOnce() -> BoolFuture + Send + Sync> {
+        Box::new(move || Box::pin(async { true }))
     }
 
-    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValue + Send + Sync> {
+    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValueFuture + Send + Sync> {
         let value = self.return_value;
-        Box::new(move || VarValue::Bool(value))
+        Box::new(move || Box::pin(async move { VarValue::Bool(value) }))
     }
 }

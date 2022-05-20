@@ -1,9 +1,14 @@
 use crate::var_creation_context::VarCreationContext;
 use anyhow::{anyhow, Error as AnyError};
+use std::future::Future;
+use std::pin::Pin;
 
 use wtd_core::vars::{BuiltinPollDef, VarDef, VarKind, VarValue};
 
 pub mod poll;
+
+pub type BoolFuture = Pin<Box<dyn Future<Output = bool>>>;
+pub type VarValueFuture = Pin<Box<dyn Future<Output = VarValue>>>;
 
 pub trait PollVarFns {
     /// Check whether the variable is "relevant" to the host. This is
@@ -11,14 +16,10 @@ pub trait PollVarFns {
     /// runtime variable map and they get polled every poll cycle for
     /// current value. Inactive variables are never polled, and do not
     /// get stored in the runtime variable map.
-    // FIXME: The returned function should be async when Rust supports
-    // async closures.
-    fn is_active_fn(&self) -> Box<dyn FnOnce() -> bool + Send + Sync>;
+    fn is_active_fn(&self) -> Box<dyn FnOnce() -> BoolFuture + Send + Sync>;
     /// Poll current value of the variable. Used for updating variable
     /// values in runtime variable map.
-    // FIXME: The returned function should be async when Rust supports
-    // async closures.
-    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValue + Send + Sync>;
+    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValueFuture + Send + Sync>;
 }
 
 pub fn new_poll_var_fns(
@@ -42,9 +43,10 @@ fn new_builtin_poll_var_fns(
     context: &VarCreationContext,
 ) -> Result<Box<dyn PollVarFns>, AnyError> {
     match bp_def.builtin_name.as_str() {
-        "login_seat_busy" => Ok(Box::new(
-            poll::login_seat_busy::LoginSeatBusyFns::new(&bp_def.params, context)?,
-        )),
+        "login_seat_busy" => Ok(Box::new(poll::login_seat_busy::LoginSeatBusyFns::new(
+            &bp_def.params,
+            context,
+        )?)),
         "test_poll_bool" => Ok(Box::new(poll::test_poll_bool::TestPollBoolFns::new(
             &bp_def.params,
         )?)),

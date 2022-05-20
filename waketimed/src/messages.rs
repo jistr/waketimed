@@ -1,3 +1,4 @@
+use crate::var_fns::{BoolFuture, VarValueFuture};
 use std::fmt;
 use wtd_core::vars::{VarName, VarValue};
 
@@ -10,8 +11,8 @@ pub enum EngineMsg {
 }
 
 pub enum WorkerMsg {
-    CallVarIsActive(VarName, Box<dyn FnOnce() -> bool + Send + Sync>),
-    CallVarPoll(VarName, Box<dyn FnOnce() -> VarValue + Send + Sync>),
+    CallVarIsActive(VarName, Box<dyn FnOnce() -> BoolFuture + Send + Sync>),
+    CallVarPoll(VarName, Box<dyn FnOnce() -> VarValueFuture + Send + Sync>),
     SpawnPollVarInterval(u64),
     Terminate,
 }
