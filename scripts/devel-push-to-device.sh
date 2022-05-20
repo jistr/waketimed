@@ -14,6 +14,10 @@ if [ -z "${WAKETIMED_DEVICE_SSH:-}" ]; then
     exit 1
 fi
 
+START=0
+if ssh $WAKETIMED_DEVICE_SSH systemctl is-active waketimed-devel.service; then
+    START=1
+fi
 ssh $WAKETIMED_DEVICE_SSH systemctl stop waketimed-devel || true
 ssh $WAKETIMED_DEVICE_SSH mkdir -p "$BIN_DIR"
 ssh $WAKETIMED_DEVICE_SSH mkdir -p "$CONFIG_DIR"
@@ -30,3 +34,6 @@ ssh $WAKETIMED_DEVICE_SSH chmod -R u=rwX,g=rX,o=rX "$DIST_DIR"
 ssh $WAKETIMED_DEVICE_SSH chmod -R u=rwX,g=rX,o=rX "$STATE_DIR"
 
 ssh $WAKETIMED_DEVICE_SSH systemctl daemon-reload
+if [ "$START" = 1 ]; then
+    ssh $WAKETIMED_DEVICE_SSH systemctl start waketimed-devel
+fi

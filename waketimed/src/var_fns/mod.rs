@@ -42,8 +42,8 @@ fn new_builtin_poll_var_fns(
     context: &VarCreationContext,
 ) -> Result<Box<dyn PollVarFns>, AnyError> {
     match bp_def.builtin_name.as_str() {
-        "login_session_busy" => Ok(Box::new(
-            poll::login_session_busy::LoginSessionBusyFns::new(&bp_def.params, context)?,
+        "login_seat_busy" => Ok(Box::new(
+            poll::login_seat_busy::LoginSeatBusyFns::new(&bp_def.params, context)?,
         )),
         "test_poll_bool" => Ok(Box::new(poll::test_poll_bool::TestPollBoolFns::new(
             &bp_def.params,

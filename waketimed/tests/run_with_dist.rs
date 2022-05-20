@@ -18,7 +18,7 @@ fn test_run_with_dist() -> Result<(), AnyError> {
     ])?;
     supervisor.wait_for_stderr_unordered(&[
         "Loading var def 'data/dist/var_def/wtd_user_busy.yaml'.",
-        "Loading var def 'data/dist/var_def/wtd_login_session_busy.yaml'.",
+        "Loading var def 'data/dist/var_def/wtd_login_seat_busy.yaml'.",
     ])?;
     supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
     supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;
