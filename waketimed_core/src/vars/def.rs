@@ -3,7 +3,7 @@ use serde_derive::{Deserialize, Serialize};
 use serde_yaml::Value;
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VarDef {
     #[serde(skip)]
     pub name: Option<VarName>,
@@ -27,7 +27,7 @@ pub enum VarDataType {
     Bool,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum VarKind {
     /// Variable polled in intervals, with is_active & poll functions
     /// built into waketimed.
@@ -41,14 +41,14 @@ pub enum VarKind {
     CategoryAny(CategoryAnyDef),
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BuiltinPollDef {
     pub builtin_name: String,
     #[serde(default)]
     pub params: HashMap<String, Value>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CategoryAnyDef {
     pub category_name: VarName,
 }

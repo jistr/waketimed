@@ -1,23 +1,29 @@
 use crate::messages::{EngineMsg, WorkerMsg};
-use crate::var_fns::OptVarValueFuture;
+use crate::var_creation_context::VarCreationContext;
+use crate::var_fns::{new_poll_var_fns, PollVarFns};
 use anyhow::{Context, Error as AnyError};
-use log::{error, trace};
-
+use log::{error, trace, warn};
+use std::collections::HashMap;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::task::JoinHandle;
 use tokio::time::{self, Duration};
-use wtd_core::vars::VarName;
+use wtd_core::vars::{VarDef, VarName};
 
 pub struct Worker {
     engine_send: UnboundedSender<EngineMsg>,
+
+    poll_var_fns: HashMap<VarName, Box<dyn PollVarFns>>,
     poll_var_task: Option<JoinHandle<()>>,
+    var_creation_context: VarCreationContext,
 }
 
 impl Worker {
     pub fn new(engine_send: UnboundedSender<EngineMsg>) -> Self {
         Self {
             engine_send,
+            poll_var_fns: HashMap::new(),
             poll_var_task: None,
+            var_creation_context: VarCreationContext::new(),
         }
     }
 
@@ -25,21 +31,41 @@ impl Worker {
         use WorkerMsg::*;
         trace!("Received WorkerMsg::{:?}.", &msg);
         match msg {
-            CallVarPoll(var_name, poll_fn) => self.handle_call_var_poll(var_name, poll_fn).await,
+            CallVarPoll(var_name) => self.handle_call_var_poll(var_name).await,
+            LoadPollVarFns(var_def) => self.handle_load_poll_var_fns(var_def).await,
             SpawnPollVarInterval(interval) => self.handle_spawn_poll_var_interval(interval).await,
             Terminate => {} // handled in the recv loop
         }
     }
 
-    async fn handle_call_var_poll(
-        &mut self,
-        var_name: VarName,
-        poll_fn: Box<dyn FnOnce() -> OptVarValueFuture + Send + Sync>,
-    ) {
-        self.engine_send
-            .send(EngineMsg::ReturnVarPoll(var_name, poll_fn().await))
-            .context("Could not send EngineMsg::ReturnVarPoll")
+    async fn handle_call_var_poll(&mut self, var_name: VarName) {
+        let poll_fn_opt = self.poll_var_fns.get(&var_name);
+        let sent = match poll_fn_opt {
+            Some(fns) => self
+                .engine_send
+                .send(EngineMsg::ReturnVarPoll(var_name, fns.poll_fn()().await)),
+            None => {
+                warn!("Cannot poll var '{}' - PollVarFns not loaded.", &var_name);
+                self.engine_send
+                    .send(EngineMsg::ReturnVarPoll(var_name, None))
+            }
+        };
+
+        sent.context("Could not send EngineMsg::ReturnVarPoll")
             .unwrap_or_else(|e| error!("{:?}", e));
+    }
+
+    async fn handle_load_poll_var_fns(&mut self, var_def: VarDef) {
+        match new_poll_var_fns(&var_def, &self.var_creation_context) {
+            Ok(var_fns) => {
+                self.poll_var_fns.insert(var_def.name().clone(), var_fns);
+            }
+            Err(e) => error!(
+                "Failed to create PollVarFns for var '{}': {}",
+                var_def.name(),
+                e
+            ),
+        }
     }
 
     async fn handle_spawn_poll_var_interval(&mut self, millis: u64) {

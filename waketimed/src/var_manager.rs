@@ -1,8 +1,6 @@
 use crate::config::Config;
 use crate::files;
 use crate::messages::WorkerMsg;
-use crate::var_creation_context::VarCreationContext;
-use crate::var_fns::{new_poll_var_fns, PollVarFns};
 use anyhow::{anyhow, Error as AnyError};
 use getset::Getters;
 use log::{error, trace};
@@ -17,11 +15,9 @@ pub struct VarManager {
     worker_send: UnboundedSender<WorkerMsg>,
     #[getset(get = "pub")]
     vars: HashMap<VarName, VarValue>,
-    poll_var_fns: HashMap<VarName, Box<dyn PollVarFns>>,
     var_defs: HashMap<VarName, VarDef>,
     category_vars: HashMap<VarName, HashSet<VarName>>,
     waitlist_poll: HashSet<VarName>,
-    var_creation_context: VarCreationContext,
 }
 
 impl VarManager {
@@ -30,11 +26,9 @@ impl VarManager {
             cfg,
             worker_send,
             vars: HashMap::new(),
-            poll_var_fns: HashMap::new(),
             var_defs: HashMap::new(),
             category_vars: HashMap::new(),
             waitlist_poll: HashSet::new(),
-            var_creation_context: VarCreationContext::new()?,
         })
     }
 
@@ -49,11 +43,13 @@ impl VarManager {
     }
 
     pub fn poll_vars(&mut self) -> Result<(), AnyError> {
-        self.waitlist_poll = HashSet::with_capacity(self.poll_var_fns.len());
-        for (var_name, var_fns) in self.poll_var_fns.iter() {
-            self.waitlist_poll.insert(var_name.clone());
-            self.worker_send
-                .send(WorkerMsg::CallVarPoll(var_name.clone(), var_fns.poll_fn()))?;
+        self.waitlist_poll = HashSet::new();
+        for (var_name, var_def) in self.var_defs.iter() {
+            if matches!(var_def.kind, VarKind::BuiltinPoll(_)) {
+                self.waitlist_poll.insert(var_name.clone());
+                self.worker_send
+                    .send(WorkerMsg::CallVarPoll(var_name.clone()))?;
+            }
         }
         Ok(())
     }
@@ -104,10 +100,10 @@ impl VarManager {
     }
 
     fn load_poll_var_fns(&mut self) -> Result<(), AnyError> {
-        self.poll_var_fns = HashMap::new();
         for var_def in self.var_defs.values() {
-            if let Some(var_fns) = new_poll_var_fns(var_def, &self.var_creation_context)? {
-                self.poll_var_fns.insert(var_def.name().clone(), var_fns);
+            if matches!(var_def.kind, VarKind::BuiltinPoll(_)) {
+                self.worker_send
+                    .send(WorkerMsg::LoadPollVarFns(var_def.clone()))?;
             }
         }
         Ok(())

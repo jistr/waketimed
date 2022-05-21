@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Error as AnyError};
 use log::warn;
+use std::thread;
 use zbus::blocking::Connection as ZbusConnection;
 
 pub struct VarCreationContext {
@@ -11,13 +12,16 @@ pub struct VarCreationContext {
 }
 
 impl VarCreationContext {
-    pub fn new() -> Result<Self, AnyError> {
-        let system_dbus_conn = ZbusConnection::system();
+    pub fn new() -> Self {
+        let system_dbus_conn = thread::spawn(ZbusConnection::system)
+            .join()
+            .expect("Failed to join D-Bus connection creation thread.");
         if let Err(ref e) = system_dbus_conn {
             warn!("Unable to connect to system D-Bus, variables relying on it will not work. Reason: {}", e);
         }
         let system_dbus_conn = system_dbus_conn.ok();
-        Ok(Self { system_dbus_conn })
+
+        Self { system_dbus_conn }
     }
 
     pub fn system_dbus_conn(&self) -> Result<ZbusConnection, AnyError> {

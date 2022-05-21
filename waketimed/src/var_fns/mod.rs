@@ -18,15 +18,16 @@ pub trait PollVarFns {
 pub fn new_poll_var_fns(
     var_def: &VarDef,
     context: &VarCreationContext,
-) -> Result<Option<Box<dyn PollVarFns>>, AnyError> {
+) -> Result<Box<dyn PollVarFns>, AnyError> {
     let kind = &var_def.kind;
     match kind {
-        VarKind::BuiltinPoll(def) => Ok(Some(new_builtin_poll_var_fns(
-            var_def.name().as_ref(),
-            def,
-            context,
-        )?)),
-        _ => Ok(None),
+        VarKind::BuiltinPoll(def) => {
+            new_builtin_poll_var_fns(var_def.name().as_ref(), def, context)
+        }
+        _ => Err(anyhow!(
+            "Can't get PollVarFns for non-poll var '{}'.",
+            var_def.name()
+        )),
     }
 }
 

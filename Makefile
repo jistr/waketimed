@@ -76,7 +76,7 @@ test-unit-waketimed:
 	cd waketimed && cargo test --bins
 
 test-int-waketimed:
-	cd waketimed && cargo test --test '*' $(WAKETIMED_TEST_INT_ARGS)
+	cd waketimed && RUST_BACKTRACE=1 cargo test --test '*' $(WAKETIMED_TEST_INT_ARGS)
 
 test-waketimed_core: test-unit-waketimed_core
 
