@@ -46,11 +46,8 @@ impl Engine {
         trace!("Received EngineMsg::{:?}.", &msg);
         match self.state {
             EngineState::Initializing => match msg {
-                EngineMsg::ReturnVarIsActive(var_name, is_active) => {
-                    self.handle_return_var_is_active(var_name, is_active)
-                }
-                EngineMsg::ReturnVarPoll(var_name, value) => {
-                    self.handle_return_var_poll(var_name, value)
+                EngineMsg::ReturnVarPoll(var_name, opt_value) => {
+                    self.handle_return_var_poll(var_name, opt_value)
                 }
                 EngineMsg::Terminate => {
                     warn!("Received Terminate while still in Initializing state. Terminating.");
@@ -66,12 +63,13 @@ impl Engine {
             },
             EngineState::Running => match msg {
                 EngineMsg::PollVarsTick => self.handle_poll_vars_tick(),
-                EngineMsg::ReturnVarPoll(var_name, value) => {
-                    self.handle_return_var_poll(var_name, value)
+                EngineMsg::ReturnVarPoll(var_name, opt_value) => {
+                    self.handle_return_var_poll(var_name, opt_value)
                 }
                 EngineMsg::Terminate => {
                     self.handle_terminate();
                 }
+                #[allow(unreachable_patterns)]
                 _ => {
                     warn!(
                         "Engine state is Running, ignoring incoming message: '{:?}'",
@@ -100,14 +98,8 @@ impl Engine {
             .expect("Failed to send WorkerMsg::Terminate");
     }
 
-    fn handle_return_var_is_active(&mut self, var_name: VarName, is_active: bool) {
-        self.var_manager
-            .handle_return_var_is_active(var_name, is_active);
-        self.set_state_running_maybe();
-    }
-
-    fn handle_return_var_poll(&mut self, var_name: VarName, value: VarValue) {
-        self.var_manager.handle_return_var_poll(var_name, value);
+    fn handle_return_var_poll(&mut self, var_name: VarName, opt_value: Option<VarValue>) {
+        self.var_manager.handle_return_var_poll(var_name, opt_value);
         if self.var_manager.waitlist_poll_is_empty() {
             self.var_manager.update_category_vars();
             self.rule_manager
@@ -132,7 +124,7 @@ impl Engine {
     }
 
     fn set_state_running_maybe(&mut self) {
-        if self.var_manager.is_initialized() {
+        if self.var_manager.waitlist_poll_is_empty() {
             self.set_state(EngineState::Running);
         }
     }

@@ -16,13 +16,17 @@ fn test_run_and_term() -> Result<(), AnyError> {
         "waketimed] Starting worker thread.",
         "Using var_def directories: [\"tests/data/run_and_term/dist/var_def\", \"tests/data/run_and_term/state/var_def\"].",
     ])?;
+    supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
     supervisor.wait_for_stderr_unordered(&[
-        "var_manager] Var 'test_poll_true' is active.",
-        "var_manager] Var 'test_inactive' is inactive, forgetting it.",
+        "ReturnVarPoll(VarName(\"test_inactive\"), None)",
+        "Var 'test_poll_true' is: true",
     ])?;
     supervisor.wait_for_stderr("CategoryAny var 'test_category' is: true")?;
-    supervisor.wait_for_stderr("Stayup rule 'test_stayup_bool' is: true.")?;
-    supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
+    supervisor.wait_for_stderr_unordered(&[
+        "Stayup rule 'test_stayup_bool' is: true.",
+        "Stayup rule 'test_is_defined_nonexistent_var' is: false.",
+        "Failed to evaluate stayup rule 'test_use_nonexistent_var'",
+    ])?;
     supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;
     supervisor.wait_for_stderr("Received EngineMsg::ReturnVarPoll")?;
     supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;

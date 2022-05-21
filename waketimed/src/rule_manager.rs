@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::files;
 use anyhow::Error as AnyError;
-use log::{error, trace};
+use log::{trace, warn};
 use rhai::{Dynamic as RhaiDynamic, Engine as RhaiEngine, Scope as RhaiScope, AST as RhaiAST};
 use std::rc::Rc;
 
@@ -67,11 +67,11 @@ impl RuleManager {
                 trace!("Stayup rule '{}' is: {}.", &rule_name, value);
                 self.stayup_values.insert(rule_name.clone(), value);
             } else {
-                error!(
+                warn!(
                     "Failed to evaluate stayup rule '{}': '{:?}'",
                     &rule_name, &result
                 );
-                self.stayup_values.insert(rule_name.clone(), false);
+                self.stayup_values.remove(rule_name);
             }
         }
     }

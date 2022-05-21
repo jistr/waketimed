@@ -1,5 +1,5 @@
 use crate::messages::{EngineMsg, WorkerMsg};
-use crate::var_fns::{BoolFuture, VarValueFuture};
+use crate::var_fns::OptVarValueFuture;
 use anyhow::{Context, Error as AnyError};
 use log::{error, trace};
 
@@ -25,34 +25,20 @@ impl Worker {
         use WorkerMsg::*;
         trace!("Received WorkerMsg::{:?}.", &msg);
         match msg {
-            CallVarIsActive(var_name, is_active_fn) => {
-                self.handle_call_var_is_active(var_name, is_active_fn).await
-            }
             CallVarPoll(var_name, poll_fn) => self.handle_call_var_poll(var_name, poll_fn).await,
             SpawnPollVarInterval(interval) => self.handle_spawn_poll_var_interval(interval).await,
             Terminate => {} // handled in the recv loop
         }
     }
 
-    async fn handle_call_var_is_active(
-        &mut self,
-        var_name: VarName,
-        is_active_fn: Box<dyn FnOnce() -> BoolFuture + Send + Sync>,
-    ) {
-        self.engine_send
-            .send(EngineMsg::ReturnVarIsActive(var_name, is_active_fn().await))
-            .context("Could not send EngineMsg::ReturnVarIsActive")
-            .unwrap_or_else(|e| error!("{:?}", e));
-    }
-
     async fn handle_call_var_poll(
         &mut self,
         var_name: VarName,
-        poll_fn: Box<dyn FnOnce() -> VarValueFuture + Send + Sync>,
+        poll_fn: Box<dyn FnOnce() -> OptVarValueFuture + Send + Sync>,
     ) {
         self.engine_send
             .send(EngineMsg::ReturnVarPoll(var_name, poll_fn().await))
-            .context("Could not send EngineMsg::ReturnVarIsActive")
+            .context("Could not send EngineMsg::ReturnVarPoll")
             .unwrap_or_else(|e| error!("{:?}", e));
     }
 

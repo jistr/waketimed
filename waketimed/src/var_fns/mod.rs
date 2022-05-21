@@ -7,19 +7,12 @@ use wtd_core::vars::{BuiltinPollDef, VarDef, VarKind, VarValue};
 
 pub mod poll;
 
-pub type BoolFuture = Pin<Box<dyn Future<Output = bool>>>;
-pub type VarValueFuture = Pin<Box<dyn Future<Output = VarValue>>>;
+pub type OptVarValueFuture = Pin<Box<dyn Future<Output = Option<VarValue>>>>;
 
 pub trait PollVarFns {
-    /// Check whether the variable is "relevant" to the host. This is
-    /// run when waketimed starts. Active variables are stored in the
-    /// runtime variable map and they get polled every poll cycle for
-    /// current value. Inactive variables are never polled, and do not
-    /// get stored in the runtime variable map.
-    fn is_active_fn(&self) -> Box<dyn FnOnce() -> BoolFuture + Send + Sync>;
     /// Poll current value of the variable. Used for updating variable
     /// values in runtime variable map.
-    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValueFuture + Send + Sync>;
+    fn poll_fn(&self) -> Box<dyn FnOnce() -> OptVarValueFuture + Send + Sync>;
 }
 
 pub fn new_poll_var_fns(

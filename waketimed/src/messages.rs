@@ -1,18 +1,19 @@
-use crate::var_fns::{BoolFuture, VarValueFuture};
+use crate::var_fns::OptVarValueFuture;
 use std::fmt;
 use wtd_core::vars::{VarName, VarValue};
 
 #[derive(Debug, PartialEq)]
 pub enum EngineMsg {
     PollVarsTick,
-    ReturnVarIsActive(VarName, bool),
-    ReturnVarPoll(VarName, VarValue),
+    ReturnVarPoll(VarName, Option<VarValue>),
     Terminate,
 }
 
 pub enum WorkerMsg {
-    CallVarIsActive(VarName, Box<dyn FnOnce() -> BoolFuture + Send + Sync>),
-    CallVarPoll(VarName, Box<dyn FnOnce() -> VarValueFuture + Send + Sync>),
+    CallVarPoll(
+        VarName,
+        Box<dyn FnOnce() -> OptVarValueFuture + Send + Sync>,
+    ),
     SpawnPollVarInterval(u64),
     Terminate,
 }
@@ -22,7 +23,6 @@ impl fmt::Debug for WorkerMsg {
         use WorkerMsg::*;
         write!(f, "WorkerMsg::")?;
         match self {
-            CallVarIsActive(ref var_name, _) => write!(f, "CallVarIsActive({:?}, _)", var_name),
             CallVarPoll(ref var_name, _) => write!(f, "CallVarPoll({:?}, _)", var_name),
             SpawnPollVarInterval(interval) => write!(f, "SpawnPollVarInterval({})", interval),
             Terminate => write!(f, "Terminate"),

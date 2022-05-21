@@ -5,7 +5,7 @@ use crate::var_creation_context::VarCreationContext;
 use crate::var_fns::{new_poll_var_fns, PollVarFns};
 use anyhow::{anyhow, Error as AnyError};
 use getset::Getters;
-use log::{debug, error, trace};
+use log::{error, trace};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use tokio::sync::mpsc::UnboundedSender;
@@ -20,7 +20,6 @@ pub struct VarManager {
     poll_var_fns: HashMap<VarName, Box<dyn PollVarFns>>,
     var_defs: HashMap<VarName, VarDef>,
     category_vars: HashMap<VarName, HashSet<VarName>>,
-    waitlist_active: HashSet<VarName>,
     waitlist_poll: HashSet<VarName>,
     var_creation_context: VarCreationContext,
 }
@@ -34,7 +33,6 @@ impl VarManager {
             poll_var_fns: HashMap::new(),
             var_defs: HashMap::new(),
             category_vars: HashMap::new(),
-            waitlist_active: HashSet::new(),
             waitlist_poll: HashSet::new(),
             var_creation_context: VarCreationContext::new()?,
         })
@@ -43,16 +41,7 @@ impl VarManager {
     pub fn init(&mut self) -> Result<(), AnyError> {
         self.load_var_defs()?;
         self.load_poll_var_fns()?;
-        self.forget_inactive_poll_vars()?;
         Ok(())
-    }
-
-    /// NOTE: is_initialized can return false later in the life time of
-    /// VarManager, but it only makes sense to check is_initialized
-    /// when Engine is trying to enter Running state, and there it will
-    /// behave correctly.
-    pub fn is_initialized(&self) -> bool {
-        self.waitlist_active.is_empty() && self.waitlist_poll.is_empty()
     }
 
     pub fn waitlist_poll_is_empty(&self) -> bool {
@@ -101,24 +90,11 @@ impl VarManager {
         Ok(())
     }
 
-    pub fn handle_return_var_is_active(&mut self, var_name: VarName, is_active: bool) {
-        if is_active {
-            debug!("Var '{}' is active.", var_name.as_ref());
-        } else {
-            debug!("Var '{}' is inactive, forgetting it.", var_name.as_ref());
-            self.poll_var_fns.remove(&var_name);
-            self.var_defs.remove(&var_name);
-        }
-        self.waitlist_active.remove(&var_name);
-        // If the last variable has been checked for activity, intitialize variables.
-        if self.waitlist_active.is_empty() {
-            self.poll_vars().expect("Unable to poll vars");
-        }
-    }
-
-    pub fn handle_return_var_poll(&mut self, var_name: VarName, value: VarValue) {
+    pub fn handle_return_var_poll(&mut self, var_name: VarName, opt_value: Option<VarValue>) {
         self.waitlist_poll.remove(&var_name);
-        self.vars.insert(var_name, value);
+        if let Some(value) = opt_value {
+            self.vars.insert(var_name, value);
+        }
     }
 
     fn load_var_defs(&mut self) -> Result<(), AnyError> {
@@ -133,18 +109,6 @@ impl VarManager {
             if let Some(var_fns) = new_poll_var_fns(var_def, &self.var_creation_context)? {
                 self.poll_var_fns.insert(var_def.name().clone(), var_fns);
             }
-        }
-        Ok(())
-    }
-
-    fn forget_inactive_poll_vars(&mut self) -> Result<(), AnyError> {
-        self.waitlist_active = HashSet::with_capacity(self.poll_var_fns.len());
-        for (var_name, var_fns) in self.poll_var_fns.iter() {
-            self.waitlist_active.insert(var_name.clone());
-            self.worker_send.send(WorkerMsg::CallVarIsActive(
-                var_name.clone(),
-                var_fns.is_active_fn(),
-            ))?;
         }
         Ok(())
     }

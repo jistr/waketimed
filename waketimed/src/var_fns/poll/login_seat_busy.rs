@@ -1,5 +1,5 @@
 use crate::var_creation_context::VarCreationContext;
-use crate::var_fns::{BoolFuture, PollVarFns, VarValueFuture};
+use crate::var_fns::{OptVarValueFuture, PollVarFns};
 use anyhow::Error as AnyError;
 use log::warn;
 use serde_yaml::Value;
@@ -26,11 +26,7 @@ impl LoginSeatBusyFns {
 }
 
 impl PollVarFns for LoginSeatBusyFns {
-    fn is_active_fn(&self) -> Box<dyn FnOnce() -> BoolFuture + Send + Sync> {
-        Box::new(move || Box::pin(async { true }))
-    }
-
-    fn poll_fn(&self) -> Box<dyn FnOnce() -> VarValueFuture + Send + Sync> {
+    fn poll_fn(&self) -> Box<dyn FnOnce() -> OptVarValueFuture + Send + Sync> {
         let system_dbus_conn = self.system_dbus_conn.clone();
         Box::new(move || {
             Box::pin(async {
@@ -55,24 +51,24 @@ impl PollVarFns for LoginSeatBusyFns {
                 .expect("Failed to join D-Bus call thread.");
                 if idle_hint_res.is_err() {
                     warn!("Failed to fetch login seat IdleHint: {:?}", idle_hint_res);
-                    return VarValue::Bool(true);
+                    return None;
                 }
                 let idle_hint_msg = idle_hint_res.unwrap();
                 let idle_hint_var: zvariant::Value = match idle_hint_msg.body() {
                     Ok(body) => body,
                     Err(e) => {
                         warn!("Failed to fetch login seat IdleHint: {:?}", e);
-                        return VarValue::Bool(true);
+                        return None;
                     }
                 };
                 if let zvariant::Value::Bool(idle_hint) = idle_hint_var {
-                    VarValue::Bool(!idle_hint)
+                    Some(VarValue::Bool(!idle_hint))
                 } else {
                     warn!(
                         "Failed to fetch login seat IdleHint - wrong data type: {:?}",
                         idle_hint_var,
                     );
-                    VarValue::Bool(true)
+                    None
                 }
             })
         })
