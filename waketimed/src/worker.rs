@@ -18,12 +18,12 @@ pub struct Worker {
 }
 
 impl Worker {
-    pub fn new(engine_send: UnboundedSender<EngineMsg>) -> Self {
+    pub async fn new(engine_send: UnboundedSender<EngineMsg>) -> Self {
         Self {
             engine_send,
             poll_var_fns: HashMap::new(),
             poll_var_task: None,
-            var_creation_context: VarCreationContext::new(),
+            var_creation_context: VarCreationContext::new().await,
         }
     }
 
@@ -93,7 +93,7 @@ pub async fn run_recv_loop(
     mut worker_recv: UnboundedReceiver<WorkerMsg>,
     engine_send: UnboundedSender<EngineMsg>,
 ) -> Result<(), AnyError> {
-    let mut worker = Worker::new(engine_send);
+    let mut worker = Worker::new(engine_send).await;
     while let Some(msg) = worker_recv.recv().await {
         let terminate = matches!(msg, WorkerMsg::Terminate);
         worker.handle_msg(msg).await;

@@ -1,21 +1,15 @@
 use anyhow::{anyhow, Error as AnyError};
 use log::warn;
-use std::thread;
-use zbus::blocking::Connection as ZbusConnection;
+
+use zbus::Connection as ZbusConnection;
 
 pub struct VarCreationContext {
-    // FIXME: Blocking connection will spawn a per-request async
-    // runtime. We should use async connection when PollVarFns trait
-    // can support async fns (when Rust supports async closures on
-    // stable).
     pub system_dbus_conn: Option<ZbusConnection>,
 }
 
 impl VarCreationContext {
-    pub fn new() -> Self {
-        let system_dbus_conn = thread::spawn(ZbusConnection::system)
-            .join()
-            .expect("Failed to join D-Bus connection creation thread.");
+    pub async fn new() -> Self {
+        let system_dbus_conn = ZbusConnection::system().await;
         if let Err(ref e) = system_dbus_conn {
             warn!("Unable to connect to system D-Bus, variables relying on it will not work. Reason: {}", e);
         }

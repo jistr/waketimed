@@ -5,9 +5,8 @@ use log::warn;
 use serde_yaml::Value;
 use std::collections::HashMap;
 
-use std::thread;
 use wtd_core::vars::VarValue;
-use zbus::blocking::Connection as ZbusConnection;
+use zbus::Connection as ZbusConnection;
 
 #[derive(Clone, Debug)]
 pub struct LoginSeatBusyFns {
@@ -29,26 +28,19 @@ impl PollVarFns for LoginSeatBusyFns {
     fn poll_fn(&self) -> Box<dyn FnOnce() -> OptVarValueFuture + Send + Sync> {
         let system_dbus_conn = self.system_dbus_conn.clone();
         Box::new(move || {
-            Box::pin(async {
-                // FIXME: We need a per-request thread to prevent tokio
-                // erroring out on runtime-in-runtime nesting. When Rust
-                // supports async closures, the PollVarFns trait functions
-                // should be returning async FnOnce.
-                //
+            Box::pin(async move {
                 // NOTE: It would probably be better to query all seats
                 // and check them all rather than hardcode "seat0".
                 // Hardcoding seems to work fine for now though.
-                let idle_hint_res = thread::spawn(move || {
-                    system_dbus_conn.call_method(
+                let idle_hint_res = system_dbus_conn
+                    .call_method(
                         Some("org.freedesktop.login1"),
                         "/org/freedesktop/login1/seat/seat0",
                         Some("org.freedesktop.DBus.Properties"),
                         "Get",
                         &["org.freedesktop.login1.Seat", "IdleHint"],
                     )
-                })
-                .join()
-                .expect("Failed to join D-Bus call thread.");
+                    .await;
                 if idle_hint_res.is_err() {
                     warn!("Failed to fetch login seat IdleHint: {:?}", idle_hint_res);
                     return None;
