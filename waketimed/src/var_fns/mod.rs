@@ -1,18 +1,16 @@
 use crate::var_creation_context::VarCreationContext;
 use anyhow::{anyhow, Error as AnyError};
-use std::future::Future;
-use std::pin::Pin;
+use async_trait::async_trait;
 
 use wtd_core::vars::{BuiltinPollDef, VarDef, VarKind, VarValue};
 
 pub mod poll;
 
-pub type OptVarValueFuture = Pin<Box<dyn Future<Output = Option<VarValue>>>>;
-
+#[async_trait]
 pub trait PollVarFns {
     /// Poll current value of the variable. Used for updating variable
     /// values in runtime variable map.
-    fn poll_fn(&self) -> Box<dyn FnOnce() -> OptVarValueFuture + Send + Sync>;
+    async fn poll(&mut self) -> Option<VarValue>;
 }
 
 pub fn new_poll_var_fns(

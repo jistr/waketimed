@@ -1,4 +1,6 @@
-use crate::var_fns::{OptVarValueFuture, PollVarFns};
+use crate::var_fns::PollVarFns;
+use async_trait::async_trait;
+use wtd_core::vars::VarValue;
 
 #[derive(Clone, Debug)]
 pub struct TestInactiveFns {}
@@ -9,8 +11,9 @@ impl TestInactiveFns {
     }
 }
 
+#[async_trait]
 impl PollVarFns for TestInactiveFns {
-    fn poll_fn(&self) -> Box<dyn FnOnce() -> OptVarValueFuture + Send + Sync> {
-        Box::new(move || Box::pin(async { None }))
+    async fn poll(&mut self) -> Option<VarValue> {
+        None
     }
 }

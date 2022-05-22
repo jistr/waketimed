@@ -39,11 +39,11 @@ impl Worker {
     }
 
     async fn handle_call_var_poll(&mut self, var_name: VarName) {
-        let poll_fn_opt = self.poll_var_fns.get(&var_name);
+        let poll_fn_opt = self.poll_var_fns.get_mut(&var_name);
         let sent = match poll_fn_opt {
             Some(fns) => self
                 .engine_send
-                .send(EngineMsg::ReturnVarPoll(var_name, fns.poll_fn()().await)),
+                .send(EngineMsg::ReturnVarPoll(var_name, fns.poll().await)),
             None => {
                 warn!("Cannot poll var '{}' - PollVarFns not loaded.", &var_name);
                 self.engine_send

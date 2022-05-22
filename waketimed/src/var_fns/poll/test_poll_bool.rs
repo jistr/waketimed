@@ -1,5 +1,6 @@
-use crate::var_fns::{OptVarValueFuture, PollVarFns};
+use crate::var_fns::PollVarFns;
 use anyhow::Error as AnyError;
+use async_trait::async_trait;
 use serde_yaml::Value;
 use std::collections::HashMap;
 
@@ -17,9 +18,10 @@ impl TestPollBoolFns {
     }
 }
 
+#[async_trait]
 impl PollVarFns for TestPollBoolFns {
-    fn poll_fn(&self) -> Box<dyn FnOnce() -> OptVarValueFuture + Send + Sync> {
+    async fn poll(&mut self) -> Option<VarValue> {
         let value = self.return_value;
-        Box::new(move || Box::pin(async move { Some(VarValue::Bool(value)) }))
+        Some(VarValue::Bool(value))
     }
 }
