@@ -101,11 +101,15 @@ impl Engine {
     fn handle_return_var_poll(&mut self, var_name: VarName, opt_value: Option<VarValue>) {
         self.var_manager.handle_return_var_poll(var_name, opt_value);
         if self.var_manager.waitlist_poll_is_empty() {
-            self.var_manager.update_category_vars();
-            self.rule_manager
-                .reset_script_scope(self.var_manager.vars());
-            self.rule_manager.compute_stayup_values();
+            self.update_everything();
         }
+    }
+
+    fn update_everything(&mut self) {
+        self.var_manager.update_category_vars();
+        self.rule_manager
+            .reset_script_scope(self.var_manager.vars());
+        self.rule_manager.compute_stayup_values();
     }
 
     fn handle_state_transition(&mut self, _old_state: EngineState, new_state: EngineState) {
