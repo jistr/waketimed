@@ -3,7 +3,7 @@ use crate::files;
 use crate::messages::WorkerMsg;
 use anyhow::{anyhow, Error as AnyError};
 use getset::Getters;
-use log::{error, trace};
+use log::{debug, error, trace};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use tokio::sync::mpsc::UnboundedSender;
@@ -71,8 +71,7 @@ impl VarManager {
                         );
                         false
                     });
-                    trace!("CategoryAny var '{}' is: {:?}", var_name, &value);
-                    self.vars.insert(var_name.clone(), VarValue::Bool(value));
+                    Self::set_var(&mut self.vars, var_name.clone(), VarValue::Bool(value));
                 }
                 _ => {}
             }
@@ -89,7 +88,7 @@ impl VarManager {
     pub fn handle_return_var_poll(&mut self, var_name: VarName, opt_value: Option<VarValue>) {
         self.waitlist_poll.remove(&var_name);
         if let Some(value) = opt_value {
-            self.vars.insert(var_name, value);
+            Self::set_var(&mut self.vars, var_name, value);
         }
     }
 
@@ -133,13 +132,20 @@ impl VarManager {
         category_vars
     }
 
+    fn set_var(vars: &mut HashMap<VarName, VarValue>, name: VarName, value: VarValue) {
+        let old_value = vars.get(&name);
+        if old_value != Some(&value) {
+            debug!("Variable changed: {} = {}", &name, &value);
+        }
+        vars.insert(name, value);
+    }
+
     fn is_any_bool_var_true(&self, var_names: &HashSet<VarName>) -> Result<bool, AnyError> {
         let var_bools: Result<Vec<bool>, AnyError> = var_names
             .iter()
             .map(|v| {
                 #[allow(irrefutable_let_patterns)]
                 if let VarValue::Bool(b) = self.get_cloned_or(v, VarValue::Bool(false)) {
-                    trace!("Var '{}' is: {}.", v, b);
                     Ok(b)
                 } else {
                     Err(anyhow!(

@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::files;
 use anyhow::Error as AnyError;
-use log::{trace, warn};
+use log::{debug, trace, warn};
 use rhai::{Dynamic as RhaiDynamic, Engine as RhaiEngine, Scope as RhaiScope, AST as RhaiAST};
 use std::rc::Rc;
 
@@ -64,8 +64,7 @@ impl RuleManager {
                 .script_engine
                 .eval_ast_with_scope::<bool>(&mut self.script_scope, ast);
             if let Ok(value) = result {
-                trace!("Stayup rule '{}' is: {}.", &rule_name, value);
-                self.stayup_values.insert(rule_name.clone(), value);
+                Self::set_stayup_value(&mut self.stayup_values, rule_name.clone(), value);
             } else {
                 warn!(
                     "Failed to evaluate stayup rule '{}': '{:?}'",
@@ -74,6 +73,14 @@ impl RuleManager {
                 self.stayup_values.remove(rule_name);
             }
         }
+    }
+
+    fn set_stayup_value(stayup_values: &mut HashMap<RuleName, bool>, name: RuleName, value: bool) {
+        let old_value = stayup_values.get(&name);
+        if old_value != Some(&value) {
+            debug!("Stayup rule changed: {} = {}", &name, &value);
+        }
+        stayup_values.insert(name, value);
     }
 
     fn compile_stayup_value_asts(&mut self) -> Result<(), AnyError> {

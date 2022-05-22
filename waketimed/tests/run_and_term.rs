@@ -19,12 +19,12 @@ fn test_run_and_term() -> Result<(), AnyError> {
     supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
     supervisor.wait_for_stderr_unordered(&[
         "ReturnVarPoll(VarName(\"test_inactive\"), None)",
-        "Var 'test_poll_true' is: true",
+        "Variable changed: test_poll_true = true",
     ])?;
-    supervisor.wait_for_stderr("CategoryAny var 'test_category' is: true")?;
+    supervisor.wait_for_stderr("Variable changed: test_category = true")?;
     supervisor.wait_for_stderr_unordered(&[
-        "Stayup rule 'test_stayup_bool' is: true.",
-        "Stayup rule 'test_is_defined_nonexistent_var' is: false.",
+        "Stayup rule changed: test_stayup_bool = true",
+        "Stayup rule changed: test_is_defined_nonexistent_var = false",
         "Failed to evaluate stayup rule 'test_use_nonexistent_var'",
     ])?;
     supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;
