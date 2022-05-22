@@ -38,7 +38,7 @@ impl Engine {
         self.set_state(EngineState::Initializing);
         self.rule_manager.init()?;
         self.var_manager.init()?;
-        self.set_state_running_maybe();
+        self.set_state(EngineState::Running);
         Ok(())
     }
 
@@ -106,7 +106,6 @@ impl Engine {
                 .reset_script_scope(self.var_manager.vars());
             self.rule_manager.compute_stayup_values();
         }
-        self.set_state_running_maybe();
     }
 
     fn handle_state_transition(&mut self, _old_state: EngineState, new_state: EngineState) {
@@ -120,12 +119,6 @@ impl Engine {
                 self.term_on_err(res);
             }
             _ => {}
-        }
-    }
-
-    fn set_state_running_maybe(&mut self) {
-        if self.var_manager.waitlist_poll_is_empty() {
-            self.set_state(EngineState::Running);
         }
     }
 
