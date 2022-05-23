@@ -146,7 +146,7 @@ fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
     Ok(())
 }
 
-fn repair_config(cfg: &mut Config) -> Result<(), AnyError> {
+fn repair_config(_cfg: &mut Config) -> Result<(), AnyError> {
     Ok(())
 }
 

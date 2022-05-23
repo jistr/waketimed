@@ -1,3 +1,4 @@
-log: waketimed=trace
+log: waketimed=debug
 state_dir: /opt/waketimed-devel/var
 dist_dir: /opt/waketimed-devel/lib
+startup_awake_time: 10000

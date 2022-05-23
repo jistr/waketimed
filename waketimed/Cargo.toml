@@ -22,9 +22,11 @@ waketimed_core = { path = "../waketimed_core" }
 
 anyhow = "1.0.56"
 async-trait = "0.1.53"
+chrono = "0.4.19"
 env_logger = "0.9.0"
 getset = "0.1.2"
 log = "0.4.16"
+nix = "0.24.1"
 rhai = { version = "1.7.0", features = ["no_object", "no_function", "no_module", "no_closure"] }
 serde = "1.0.136"
 serde_derive = "1.0.136"
@@ -35,6 +37,3 @@ zbus = { version = "2.2.0", default-features = false, features = ["tokio"] }
 # zbus_macros = "2.1.1"
 # zbus_polkit = "2.0.1"
 zvariant = "3.2.1"
-
-[dev-dependencies]
-nix = "0.23.1"

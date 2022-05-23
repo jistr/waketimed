@@ -15,6 +15,7 @@ fn test_run_with_dist() -> Result<(), AnyError> {
         "waketimed] Starting signal thread.",
         "waketimed] Starting worker thread.",
         "Using var_def directories: [\"data/dist/var_def\"].",
+        "Nearest possible suspend:",
     ])?;
     supervisor.wait_for_stderr_unordered(&[
         "Loading var def 'data/dist/var_def/wtd_user_busy.yaml'.",

@@ -28,8 +28,9 @@ fn test_minimal() -> Result<(), AnyError> {
     supervisor.wait_for_stderr_unordered(&[
         "waketimed] Starting signal thread.",
         "waketimed] Starting worker thread.",
-        "engine] Engine entering state 'Running'.",
+        "Nearest possible suspend:",
     ])?;
+    supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
     supervisor.terminate()?;
     supervisor.wait_for_stderr_unordered(&[
         "waketimed] Joining signal thread.",

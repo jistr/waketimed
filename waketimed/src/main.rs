@@ -5,6 +5,7 @@ mod engine;
 pub(crate) mod files;
 pub(crate) mod messages;
 pub(crate) mod rule_manager;
+pub(crate) mod sleep_manager;
 #[cfg(test)]
 pub(crate) mod test_helpers;
 pub(crate) mod var_creation_context;

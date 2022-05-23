@@ -15,6 +15,7 @@ fn test_run_and_term() -> Result<(), AnyError> {
         "waketimed] Starting signal thread.",
         "waketimed] Starting worker thread.",
         "Using var_def directories: [\"tests/data/run_and_term/dist/var_def\", \"tests/data/run_and_term/state/var_def\"].",
+        "Nearest possible suspend:",
     ])?;
     supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
     supervisor.wait_for_stderr_unordered(&[
@@ -29,8 +30,10 @@ fn test_run_and_term() -> Result<(), AnyError> {
     ])?;
     supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;
     supervisor.wait_for_stderr("Received EngineMsg::ReturnVarPoll")?;
+    supervisor.wait_for_stderr("Nearest possible suspend:")?;
     supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;
     supervisor.wait_for_stderr("Received EngineMsg::ReturnVarPoll")?;
+    supervisor.wait_for_stderr("Nearest possible suspend:")?;
     supervisor.terminate()?;
     supervisor.wait_for_stderr_unordered(&[
         "waketimed] Joining signal thread.",

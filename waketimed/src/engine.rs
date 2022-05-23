@@ -1,6 +1,7 @@
 use crate::config::Config;
 use crate::messages::{EngineMsg, WorkerMsg};
 use crate::rule_manager::RuleManager;
+use crate::sleep_manager::SleepManager;
 use crate::var_manager::VarManager;
 use anyhow::{Context, Error as AnyError};
 use log::{debug, error, trace, warn};
@@ -13,6 +14,7 @@ pub struct Engine {
     worker_send: UnboundedSender<WorkerMsg>,
 
     rule_manager: RuleManager,
+    sleep_manager: SleepManager,
     state: EngineState,
     var_manager: VarManager,
 }
@@ -24,11 +26,13 @@ impl Engine {
         worker_send: UnboundedSender<WorkerMsg>,
     ) -> Result<Self, AnyError> {
         let rule_manager = RuleManager::new(cfg.clone());
+        let sleep_manager = SleepManager::new(cfg.clone());
         let var_manager = VarManager::new(cfg, worker_send.clone())?;
         Ok(Self {
             engine_send,
             worker_send,
             rule_manager,
+            sleep_manager,
             state: EngineState::Initializing,
             var_manager,
         })
@@ -37,6 +41,7 @@ impl Engine {
     pub fn init(&mut self) -> Result<(), AnyError> {
         self.set_state(EngineState::Initializing);
         self.rule_manager.init()?;
+        self.sleep_manager.init()?;
         self.var_manager.init()?;
         self.set_state(EngineState::Running);
         Ok(())
@@ -102,6 +107,7 @@ impl Engine {
         self.var_manager.handle_return_var_poll(var_name, opt_value);
         if self.var_manager.waitlist_poll_is_empty() {
             self.update_everything();
+            // self.sleep_manager.suspend_if_allowed();
         }
     }
 
@@ -110,6 +116,11 @@ impl Engine {
         self.rule_manager
             .reset_script_scope(self.var_manager.vars());
         self.rule_manager.compute_stayup_values();
+        let result = self
+            .sleep_manager
+            .update(self.rule_manager.is_stayup_active())
+            .context("Failed to update SleepManager");
+        self.term_on_err(result);
     }
 
     fn handle_state_transition(&mut self, _old_state: EngineState, new_state: EngineState) {

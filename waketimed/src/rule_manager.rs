@@ -75,6 +75,10 @@ impl RuleManager {
         }
     }
 
+    pub fn is_stayup_active(&self) -> bool {
+        self.stayup_values.values().any(|is_active| *is_active)
+    }
+
     fn set_stayup_value(stayup_values: &mut HashMap<RuleName, bool>, name: RuleName, value: bool) {
         let old_value = stayup_values.get(&name);
         if old_value != Some(&value) {
