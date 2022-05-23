@@ -36,23 +36,16 @@ pub struct Config {
     // sleep too often, this gives system admin a chance to fix the
     // situation or stop waketimed after system boot.
     #[serde(default = "default_startup_awake_time")]
-    pub startup_awake_time: u32,
+    pub startup_awake_time: u64,
     // Minimum time to stay up after waking up. Useful to prevent fast
     // flapping between sleep/wake.
     #[serde(default = "default_minimum_awake_time")]
-    pub minimum_awake_time: u32,
+    pub minimum_awake_time: u64,
     // Minimum time to stay awake after last stayup condition turns
     // false, in seconds. Useful to prevent going to sleep immediately
     // without sending out any "sleep approaching" signals.
     #[serde(default = "default_stayup_cleared_awake_time")]
-    pub stayup_cleared_awake_time: u32,
-    // Time intervals, in seconds before expected time of going into
-    // sleep, to announce the approaching sleep via a D-Bus signal.
-    // Only signal intervals that are still relevant at the time when
-    // waketimed realizes that sleep is approaching will be sent. See
-    // `stayup_cleared_awake_time` setting.
-    #[serde(default = "default_sleep_approaching_signal_intervals")]
-    pub sleep_approaching_signal_intervals: Vec<u32>,
+    pub stayup_cleared_awake_time: u64,
 }
 
 impl Config {
@@ -133,24 +126,16 @@ fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
         cfg.log = value;
     }
     if let Ok(value) = env::var("WAKETIMED_STARTUP_AWAKE_TIME") {
-        cfg.startup_awake_time = value.parse::<u32>()?;
+        cfg.startup_awake_time = value.parse::<u64>()?;
     }
     if let Ok(value) = env::var("WAKETIMED_MINIMUM_AWAKE_TIME") {
-        cfg.minimum_awake_time = value.parse::<u32>()?;
+        cfg.minimum_awake_time = value.parse::<u64>()?;
     }
     if let Ok(value) = env::var("WAKETIMED_STAYUP_CLEARED_AWAKE_TIME") {
-        cfg.stayup_cleared_awake_time = value.parse::<u32>()?;
+        cfg.stayup_cleared_awake_time = value.parse::<u64>()?;
     }
     if let Ok(value) = env::var("WAKETIMED_POLL_VARIABLE_INTERVAL") {
         cfg.poll_variable_interval = value.parse::<u64>()?;
-    }
-    if let Ok(value) = env::var("WAKETIMED_SLEEP_APPROACHING_SIGNAL_INTERVALS") {
-        let mut intervals: Vec<u32> = vec![];
-        for interval_str in value.split(',') {
-            let interval = interval_str.parse::<u32>()?;
-            intervals.push(interval);
-        }
-        cfg.sleep_approaching_signal_intervals = intervals;
     }
     if let Ok(value) = env::var("WAKETIMED_STATE_DIR") {
         cfg.state_dir = value;
@@ -162,9 +147,6 @@ fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
 }
 
 fn repair_config(cfg: &mut Config) -> Result<(), AnyError> {
-    cfg.sleep_approaching_signal_intervals
-        .sort_by(|a, b| b.cmp(a)); // descending ordering
-    cfg.sleep_approaching_signal_intervals.dedup();
     Ok(())
 }
 
@@ -172,24 +154,20 @@ fn default_log() -> String {
     "info".to_string()
 }
 
-fn default_startup_awake_time() -> u32 {
-    300
+fn default_startup_awake_time() -> u64 {
+    300_000
 }
 
-fn default_minimum_awake_time() -> u32 {
-    10
+fn default_minimum_awake_time() -> u64 {
+    10_000
 }
 
-fn default_stayup_cleared_awake_time() -> u32 {
-    10
+fn default_stayup_cleared_awake_time() -> u64 {
+    10_000
 }
 
 fn default_poll_variable_interval() -> u64 {
-    3000
-}
-
-fn default_sleep_approaching_signal_intervals() -> Vec<u32> {
-    vec![10, 5, 4, 3, 2, 1]
+    3_000
 }
 
 fn default_state_dir() -> String {
