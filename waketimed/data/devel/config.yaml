@@ -2,3 +2,6 @@ log: waketimed=debug
 state_dir: /opt/waketimed-devel/var
 dist_dir: /opt/waketimed-devel/lib
 startup_awake_time: 10000
+minimum_awake_time: 10000
+stayup_cleared_awake_time: 10000
+poll_variable_interval: 3000
