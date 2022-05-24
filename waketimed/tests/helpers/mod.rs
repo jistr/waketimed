@@ -18,6 +18,7 @@ pub fn waketimed_command() -> Command {
     let mut cmd = Command::new(&cmd_path);
     cmd.current_dir(env!("CARGO_MANIFEST_DIR"))
         .env("WAKETIMED_BUS_ADDRESS", env!("WAKETIMED_BUS_ADDRESS"))
+        .env("WAKETIMED_TEST_MODE", "true")
         .stdin(Stdio::null())
         .stderr(Stdio::piped())
         .stdout(Stdio::piped());

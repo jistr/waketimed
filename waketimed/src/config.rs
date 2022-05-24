@@ -29,6 +29,10 @@ pub struct Config {
     // exact times of falling asleep), but consume less CPU.
     #[serde(default = "default_poll_variable_interval")]
     pub poll_variable_interval: u64,
+    // Test mode prevents waketimed from actually suspending the
+    // system.
+    #[serde(default = "default_test_mode")]
+    pub test_mode: bool,
 
     // Time to stay up (prevent sleep) after waketimed starts, in
     // seconds. Results in automatic creation of a "stay up until"
@@ -137,6 +141,9 @@ fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
     if let Ok(value) = env::var("WAKETIMED_POLL_VARIABLE_INTERVAL") {
         cfg.poll_variable_interval = value.parse::<u64>()?;
     }
+    if let Ok(value) = env::var("WAKETIMED_TEST_MODE") {
+        cfg.test_mode = value.parse::<bool>()?;
+    }
     if let Ok(value) = env::var("WAKETIMED_STATE_DIR") {
         cfg.state_dir = value;
     }
@@ -168,6 +175,10 @@ fn default_stayup_cleared_awake_time() -> u64 {
 
 fn default_poll_variable_interval() -> u64 {
     3_000
+}
+
+fn default_test_mode() -> bool {
+    false
 }
 
 fn default_state_dir() -> String {
