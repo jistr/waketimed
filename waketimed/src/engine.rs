@@ -115,21 +115,22 @@ impl Engine {
     }
 
     fn engine_tick(&mut self) {
-        self.update_everything();
-        // self.sleep_manager.suspend_if_allowed();
+        let result = self.update_everything();
+        self.term_on_err(result);
+        let result = self.sleep_manager.suspend_if_allowed();
+        self.term_on_err(result);
     }
 
-    fn update_everything(&mut self) {
+    fn update_everything(&mut self) -> Result<(), AnyError> {
         trace!("Executing Engine logic update routine.");
         self.var_manager.update_category_vars();
         self.rule_manager
             .reset_script_scope(self.var_manager.vars());
         self.rule_manager.compute_stayup_values();
-        let result = self
-            .sleep_manager
+        self.sleep_manager
             .update(self.rule_manager.is_stayup_active())
-            .context("Failed to update SleepManager");
-        self.term_on_err(result);
+            .context("Failed to update SleepManager")?;
+        Ok(())
     }
 
     fn handle_state_transition(&mut self, _old_state: EngineState, new_state: EngineState) {

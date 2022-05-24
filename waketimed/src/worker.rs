@@ -8,9 +8,12 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::task::JoinHandle;
 use tokio::time::{self, Duration};
 use wtd_core::vars::{VarDef, VarName};
+use zbus::Connection as ZbusConnection;
 
 pub struct Worker {
     engine_send: UnboundedSender<EngineMsg>,
+    #[allow(dead_code)]
+    system_dbus_conn: Option<ZbusConnection>,
 
     poll_var_fns: HashMap<VarName, Box<dyn PollVarFns>>,
     poll_var_task: Option<JoinHandle<()>>,
@@ -19,11 +22,20 @@ pub struct Worker {
 
 impl Worker {
     pub async fn new(engine_send: UnboundedSender<EngineMsg>) -> Self {
+        let system_dbus_conn = ZbusConnection::system().await;
+        if let Err(ref e) = system_dbus_conn {
+            warn!("Unable to connect to system D-Bus, variables relying on it will not work. Reason: {}", e);
+        }
+        let system_dbus_conn = system_dbus_conn.ok();
+        let system_dbus_conn2 = system_dbus_conn.clone();
+
         Self {
             engine_send,
+            system_dbus_conn,
+
             poll_var_fns: HashMap::new(),
             poll_var_task: None,
-            var_creation_context: VarCreationContext::new().await,
+            var_creation_context: VarCreationContext::new(system_dbus_conn2),
         }
     }
 

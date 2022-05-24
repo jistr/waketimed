@@ -37,8 +37,9 @@ impl SleepManager {
         Ok(())
     }
 
-    // pub fn suspend_if_allowed(&mut self) -> Result<(), AnyError> {
-    // }
+    pub fn suspend_if_allowed(&mut self) -> Result<(), AnyError> {
+        Ok(())
+    }
 
     fn bump_nearest_possible_suspend_from_now(
         &mut self,
