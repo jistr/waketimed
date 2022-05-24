@@ -112,6 +112,7 @@ impl Engine {
     }
 
     fn update_everything(&mut self) {
+        trace!("Executing Engine logic update routine.");
         self.var_manager.update_category_vars();
         self.rule_manager
             .reset_script_scope(self.var_manager.vars());
