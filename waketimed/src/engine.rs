@@ -94,6 +94,10 @@ impl Engine {
     fn handle_poll_vars_tick(&mut self) {
         let result = self.var_manager.poll_vars().context("Failed to poll vars.");
         self.term_on_err(result);
+        // If there were no vars to poll, tick right away.
+        if self.var_manager.waitlist_poll_is_empty() {
+            self.engine_tick();
+        }
     }
 
     fn handle_terminate(&mut self) {
@@ -106,9 +110,13 @@ impl Engine {
     fn handle_return_var_poll(&mut self, var_name: VarName, opt_value: Option<VarValue>) {
         self.var_manager.handle_return_var_poll(var_name, opt_value);
         if self.var_manager.waitlist_poll_is_empty() {
-            self.update_everything();
-            // self.sleep_manager.suspend_if_allowed();
+            self.engine_tick();
         }
+    }
+
+    fn engine_tick(&mut self) {
+        self.update_everything();
+        // self.sleep_manager.suspend_if_allowed();
     }
 
     fn update_everything(&mut self) {
