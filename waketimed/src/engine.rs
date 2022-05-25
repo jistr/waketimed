@@ -26,7 +26,7 @@ impl Engine {
         worker_send: UnboundedSender<WorkerMsg>,
     ) -> Result<Self, AnyError> {
         let rule_manager = RuleManager::new(cfg.clone());
-        let sleep_manager = SleepManager::new(cfg.clone());
+        let sleep_manager = SleepManager::new(cfg.clone(), worker_send.clone());
         let var_manager = VarManager::new(cfg, worker_send.clone())?;
         Ok(Self {
             engine_send,

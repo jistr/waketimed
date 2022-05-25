@@ -1,16 +1,15 @@
+mod sleep_worker;
 mod var_worker;
-
+use self::sleep_worker::SleepWorker;
 use self::var_worker::VarWorker;
 use crate::messages::{EngineMsg, WorkerMsg};
-
 use anyhow::Error as AnyError;
 use log::{trace, warn};
-
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-
 use zbus::Connection as ZbusConnection;
 
 pub struct Worker {
+    sleep_worker: SleepWorker,
     var_worker: VarWorker,
 }
 
@@ -21,9 +20,13 @@ impl Worker {
             warn!("Unable to connect to system D-Bus, variables and features relying on it will not work. Reason: {}", e);
         }
         let system_dbus_conn = system_dbus_conn.ok();
+        let sleep_worker = SleepWorker::new(engine_send.clone(), system_dbus_conn.clone());
         let var_worker = VarWorker::new(engine_send, system_dbus_conn);
 
-        Self { var_worker }
+        Self {
+            sleep_worker,
+            var_worker,
+        }
     }
 
     pub async fn handle_msg(&mut self, msg: WorkerMsg) {
@@ -37,6 +40,7 @@ impl Worker {
                     .handle_spawn_poll_var_interval(interval)
                     .await
             }
+            Suspend(test_mode) => self.sleep_worker.handle_suspend(test_mode).await,
             Terminate => {} // handled in the recv loop
         }
     }

@@ -11,6 +11,9 @@ pub enum EngineMsg {
 pub enum WorkerMsg {
     CallVarPoll(VarName),
     LoadPollVarFns(VarDef),
+    // SpawnPollVarInterval(ms)
     SpawnPollVarInterval(u64),
+    // Suspend(test_mode)
+    Suspend(bool),
     Terminate,
 }
