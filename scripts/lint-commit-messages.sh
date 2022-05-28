@@ -3,27 +3,7 @@ set -euo pipefail
 
 # The start of the range can be bumped up over time to something that
 # all live branches include. Currently pointing to initial commit.
-LINT_COMMITS_RANGE="214e69f8be0f8900a80c2de3255fc7938ea918c0..HEAD"
-ALLOWED_TYPES=(
-    build
-    change
-    ci
-    dev
-    doc
-    feat
-    fix
-    perf
-    refact
-    revert
-    style
-    test
-)
-ALLOWED_SCOPES=(
-    d
-    ctl
-    core
-)
-MAX_FIRST_LINE_LENGTH=75
+LINT_COMMITS_RANGE="2346e60e5e23e732240916df98294f48d23b82f7..HEAD"
 
 function lint_commits_in_range() {
     while read -r rev; do
@@ -56,22 +36,27 @@ function lint_commit() {
             echo "Unrecognized type '$type'. Allowed types: ${ALLOWED_TYPES[*]}"
             exit 1
         fi
-        if [ -n "$scope_parens" ] && ! printf '%s\n' "${ALLOWED_SCOPES[@]}" | grep -qxF "$scope"; then
-            error_header_first_line "$rev" "$first_line"
-            echo "Unrecognized scope '$scope'. Allowed scopes: ${ALLOWED_SCOPES[*]}"
+        if [ -n "$scope_parens" ]; then
+            echo "Scopes are presently not allowed in commit messages."
             exit 1
         fi
+        # if [ -n "$scope_parens" ] && ! printf '%s\n' "${ALLOWED_SCOPES[@]}" | grep -qxF "$scope"; then
+        #     error_header_first_line "$rev" "$first_line"
+        #     echo "Unrecognized scope '$scope'. Allowed scopes: ${ALLOWED_SCOPES[*]}"
+        #     exit 1
+        # fi
     else
         error_header_first_line "$rev" "$first_line"
         echo "The first line does not match pattern. Examples of first line formatting:"
         echo "type: summary"
         echo "type!: summary"
-        echo "type(scope): summary"
-        echo "type(scope)!: summary"
+        # echo "type(scope): summary"
+        # echo "type(scope)!: summary"
         echo
         echo "Allowed types: ${ALLOWED_TYPES[*]}"
-        echo "Allowed scopes: ${ALLOWED_SCOPES[*]}"
+        # echo "Allowed scopes: ${ALLOWED_SCOPES[*]}"
         echo "Variants with exclamation mark should be used for breaking changes."
+        exit 1
     fi
 
     local num_lines=$(wc -l <<<"$commit_msg")
