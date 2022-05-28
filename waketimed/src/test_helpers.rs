@@ -3,7 +3,9 @@ use waketimed_core::rules::RuleName;
 use waketimed_core::vars::VarName;
 
 pub fn default_config() -> Config {
-    serde_yaml::from_str("{}").expect("Unable to create default Config.")
+    let mut cfg: Config = serde_yaml::from_str("{}").expect("Unable to create default Config.");
+    cfg.test_mode = true;
+    cfg
 }
 
 pub fn run_and_term_config() -> Config {
@@ -16,6 +18,7 @@ pub fn run_and_term_config() -> Config {
         "{}/tests/data/run_and_term/dist",
         env!("CARGO_MANIFEST_DIR"),
     );
+    cfg.test_mode = true;
     cfg.poll_variable_interval = 100;
     cfg
 }

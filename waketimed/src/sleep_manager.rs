@@ -83,5 +83,66 @@ pub fn clock_from_suspend_to_utc(suspend_clock_time: Duration) -> Result<DateTim
 
 #[cfg(test)]
 mod tests {
-    // TODO: Add unit tests
+    use super::*;
+    use crate::test_helpers::default_config;
+    use tokio::sync::mpsc::error::TryRecvError;
+    use tokio::sync::mpsc::UnboundedReceiver;
+
+    fn create_sleep_manager(cfg: Config) -> (SleepManager, UnboundedReceiver<WorkerMsg>) {
+        let (worker_send, worker_recv) = tokio::sync::mpsc::unbounded_channel();
+        let mgr = SleepManager::new(Rc::new(cfg), worker_send);
+        (mgr, worker_recv)
+    }
+
+    #[test]
+    fn test_update() -> Result<(), AnyError> {
+        let mut cfg = default_config();
+        cfg.startup_awake_time = 50;
+        cfg.stayup_cleared_awake_time = 1000;
+        cfg.poll_variable_interval = 1000;
+        let (mut mgr, _worker_recv) = create_sleep_manager(cfg);
+        mgr.init().expect("Failed to init SleepManager.");
+        assert!(!mgr.is_suspend_allowed()?);
+        let initial_nearest_suspend = mgr.nearest_possible_suspend;
+        mgr.update(false)?;
+        assert_eq!(initial_nearest_suspend, mgr.nearest_possible_suspend);
+        assert!(!mgr.is_suspend_allowed()?);
+        mgr.update(true)?;
+        assert!(initial_nearest_suspend < mgr.nearest_possible_suspend);
+        assert!(!mgr.is_suspend_allowed()?);
+        Ok(())
+    }
+
+    #[test]
+    fn test_suspend() -> Result<(), AnyError> {
+        let mut cfg = default_config();
+        cfg.startup_awake_time = 0;
+        cfg.stayup_cleared_awake_time = 1000;
+        cfg.poll_variable_interval = 1000;
+        let (mut mgr, mut worker_recv) = create_sleep_manager(cfg);
+        mgr.init().expect("Failed to init SleepManager.");
+
+        // Initially suspend is not allowed because internal
+        // stayup_active is set to true.
+        assert!(!mgr.is_suspend_allowed()?);
+        mgr.suspend_if_allowed()?;
+        assert_eq!(worker_recv.try_recv(), Err(TryRecvError::Empty));
+
+        // First update() will set stayup_active to false and not
+        // increase nearest_possible_suspend. Suspend should be
+        // allowed.
+        mgr.update(false)?;
+        assert!(mgr.is_suspend_allowed()?);
+        mgr.suspend_if_allowed()?;
+        assert_eq!(worker_recv.try_recv(), Ok(WorkerMsg::Suspend(true)));
+
+        // Second update now sets stayup_active true again. Suspend
+        // should not be allowed.
+        mgr.update(true)?;
+        assert!(!mgr.is_suspend_allowed()?);
+        mgr.suspend_if_allowed()?;
+        assert_eq!(worker_recv.try_recv(), Err(TryRecvError::Empty));
+
+        Ok(())
+    }
 }
