@@ -39,6 +39,10 @@ fn new_builtin_poll_var_fns(
             &bp_def.params,
             context,
         )?)),
+        "sleep_block_inhibited" => Ok(Box::new(
+            poll::sleep_block_inhibited::SleepBlockInhibitedFns::new(&bp_def.params, context)?,
+        )),
+
         "test_poll_bool" => Ok(Box::new(poll::test_poll_bool::TestPollBoolFns::new(
             &bp_def.params,
         )?)),

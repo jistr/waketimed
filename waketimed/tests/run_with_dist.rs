@@ -17,13 +17,15 @@ fn test_run_with_dist() -> Result<(), AnyError> {
     ])?;
     supervisor.wait_for_stderr("Using rule_def directories: [\"data/dist/rule_def\"].")?;
     supervisor.wait_for_stderr_unordered(&[
+        "Loading rule def 'data/dist/rule_def/wtd_sleep_block_inhibited.yaml'.",
         "Loading rule def 'data/dist/rule_def/wtd_user_busy.yaml'.",
     ])?;
     supervisor.wait_for_stderr_unordered(&["Nearest possible suspend:"])?;
     supervisor.wait_for_stderr("Using var_def directories: [\"data/dist/var_def\"].")?;
     supervisor.wait_for_stderr_unordered(&[
-        "Loading var def 'data/dist/var_def/wtd_user_busy.yaml'.",
         "Loading var def 'data/dist/var_def/wtd_login_seat_busy.yaml'.",
+        "Loading var def 'data/dist/var_def/wtd_sleep_block_inhibited.yaml'.",
+        "Loading var def 'data/dist/var_def/wtd_user_busy.yaml'.",
     ])?;
     supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
     supervisor.wait_for_stderr("Received EngineMsg::PollVarsTick.")?;
