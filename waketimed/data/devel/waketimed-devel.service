@@ -11,3 +11,6 @@ OOMScoreAdjust=-500
 
 Environment=WAKETIMED_CONFIG=/opt/waketimed-devel/etc/config.yaml
 ExecStart=/opt/waketimed-devel/bin/waketimed
+
+[Install]
+WantedBy=multi-user.target
