@@ -1,0 +1,5 @@
+#!/usr/bin/sh
+
+LINT_COMMIT_MESSAGE_SCRIPT=$(git rev-parse --show-toplevel)/scripts/lint-commit-message.sh
+
+cat "$1" | $LINT_COMMIT_MESSAGE_SCRIPT
