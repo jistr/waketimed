@@ -4,7 +4,7 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 CONTAINER_MGR ?= podman
 WAKETIMED_BUILD_PROFILE ?= --release
-WAKETIMED_TEST_INT_ARGS ?=
+WAKETIMED_TEST_INT_ARGS ?= -- --nocapture
 export WAKETIMED_BUS_ADDRESS ?= $(DBUS_SESSION_BUS_ADDRESS)
 
 # BUILD
