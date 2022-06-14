@@ -1,10 +1,11 @@
 use crate::var_creation_context::VarCreationContext;
 use crate::var_fns::PollVarFns;
-use anyhow::Error as AnyError;
+use anyhow::{anyhow, Error as AnyError};
 use async_trait::async_trait;
 use log::warn;
 use serde_yaml::Value;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use wtd_core::vars::VarValue;
 use zbus::Connection as ZbusConnection;
@@ -41,26 +42,23 @@ impl PollVarFns for LoginSeatBusyFns {
                 &["org.freedesktop.login1.Seat", "IdleHint"],
             )
             .await;
-        if idle_hint_res.is_err() {
-            warn!("Failed to fetch login seat IdleHint: {:?}", idle_hint_res);
-            return None;
-        }
-        let idle_hint_msg = idle_hint_res.unwrap();
-        let idle_hint_var: zvariant::Value = match idle_hint_msg.body() {
-            Ok(body) => body,
-            Err(e) => {
-                warn!("Failed to fetch login seat IdleHint: {:?}", e);
-                return None;
-            }
-        };
-        if let zvariant::Value::Bool(idle_hint) = idle_hint_var {
-            Some(VarValue::Bool(!idle_hint))
-        } else {
-            warn!(
-                "Failed to fetch login seat IdleHint - wrong data type: {:?}",
-                idle_hint_var,
-            );
-            None
-        }
+        process_call_result(idle_hint_res)
+            .map_err(|e| warn!("Failed to fetch login manager property IdleHint: {:?}", e))
+            .ok()
+    }
+}
+
+fn process_call_result(
+    idle_hint_res: Result<Arc<zbus::Message>, zbus::Error>,
+) -> Result<VarValue, AnyError> {
+    let idle_hint_msg = idle_hint_res?;
+    let body_value: zvariant::Value = idle_hint_msg.body()?;
+    if let zvariant::Value::Bool(idle_hint) = body_value {
+        // Using ! operator because the semantics is inverted. Login
+        // manager uses "idle", we use "busy" because we typically
+        // want truthy values for "block suspend when ...".
+        Ok(VarValue::Bool(!idle_hint))
+    } else {
+        Err(anyhow!("Wrong data type."))
     }
 }
