@@ -24,8 +24,5 @@ pub enum RuleKind {
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StayupBoolDef {
-    // TODO: Have an is-active check and forget rules which are
-    // irrelevant on a given device.
-    // pub is_active_script: String,
     pub value_script: String,
 }
