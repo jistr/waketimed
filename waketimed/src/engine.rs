@@ -1,10 +1,11 @@
+use crate::chassis_check;
 use crate::config::Config;
 use crate::messages::{EngineMsg, WorkerMsg};
 use crate::rule_manager::RuleManager;
 use crate::sleep_manager::SleepManager;
 use crate::var_manager::VarManager;
 use anyhow::{Context, Error as AnyError};
-use log::{debug, error, trace, warn};
+use log::{debug, error, info, trace, warn};
 use std::rc::Rc;
 use tokio::sync::mpsc::UnboundedSender;
 use wtd_core::vars::{VarName, VarValue};
@@ -13,6 +14,7 @@ pub struct Engine {
     engine_send: UnboundedSender<EngineMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
 
+    cfg: Rc<Config>,
     rule_manager: RuleManager,
     sleep_manager: SleepManager,
     state: EngineState,
@@ -27,10 +29,11 @@ impl Engine {
     ) -> Result<Self, AnyError> {
         let rule_manager = RuleManager::new(cfg.clone());
         let sleep_manager = SleepManager::new(cfg.clone(), worker_send.clone());
-        let var_manager = VarManager::new(cfg, worker_send.clone())?;
+        let var_manager = VarManager::new(cfg.clone(), worker_send.clone())?;
         Ok(Self {
             engine_send,
             worker_send,
+            cfg,
             rule_manager,
             sleep_manager,
             state: EngineState::Initializing,
@@ -40,6 +43,18 @@ impl Engine {
 
     pub fn init(&mut self) -> Result<(), AnyError> {
         self.set_state(EngineState::Initializing);
+
+        let chassis_type = chassis_check::chassis_type()?;
+        if !chassis_check::is_chassis_allowed(&chassis_type, &self.cfg.allowed_chassis_types) {
+            info!(
+                "Chassis '{}' is not in the list of configured allowed chassis types {:?}. Disabling the waketimed engine.",
+                &chassis_type,
+                &self.cfg.allowed_chassis_types,
+            );
+            self.set_state(EngineState::Disabled);
+            return Ok(());
+        }
+
         self.rule_manager.init()?;
         self.sleep_manager.init()?;
         self.var_manager.init()?;
@@ -78,6 +93,17 @@ impl Engine {
                 _ => {
                     warn!(
                         "Engine state is Running, ignoring incoming message: '{:?}'",
+                        msg
+                    );
+                }
+            },
+            EngineState::Disabled => match msg {
+                EngineMsg::Terminate => {
+                    self.handle_terminate();
+                }
+                _ => {
+                    warn!(
+                        "Engine state is Disabled, ignoring incoming message: '{:?}'",
                         msg
                     );
                 }
@@ -173,6 +199,7 @@ impl Engine {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum EngineState {
+    Disabled,
     Initializing,
     Running,
     Terminating,

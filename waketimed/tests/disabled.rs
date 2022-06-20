@@ -3,15 +3,11 @@ use std::path::Path;
 
 mod helpers;
 
-/// This is a minimal variant of run-and-terminate scenario. The
-/// daemon starts, loads data definitions, the engine enters running
-/// state, the daemon receives SIGTERM and terminates safely.
-///
-/// The difference between 'minimal' and 'run_and_term' is that
-/// minimal has no data definitions to load, not even data directories
-/// created and no config to load, but it still should start up.
+/// This is a 'disabled' variant of 'minimal' scenario. The daemon
+/// starts, discovers that the chassis type is not among the allowed
+/// ones, enters Disabled state and waits for SIGTERM.
 #[test]
-fn test_minimal() -> Result<(), AnyError> {
+fn test_disabled() -> Result<(), AnyError> {
     // Assert that /etc/waketimed/config.yaml does not exist, it would
     // interfere with the test.
     assert!(!Path::new("/etc/waketimed/config.yaml").exists());
@@ -23,15 +19,15 @@ fn test_minimal() -> Result<(), AnyError> {
     // State dir has to exist, its subdirs do not have to exist, some
     // of which may be auto-created on startup.
     cmd.env("WAKETIMED_STATE_DIR", "tests/data/minimal/state");
-    cmd.env("WAKETIMED_ALLOWED_CHASSIS_TYPES", "all");
+    cmd.env("WAKETIMED_ALLOWED_CHASSIS_TYPES", "");
     let wtd_proc = cmd.spawn().context("Failed to spawn waketimed process.")?;
     let mut supervisor = helpers::Supervisor::new(wtd_proc);
     supervisor.wait_for_stderr_unordered(&[
         "waketimed] Starting signal thread.",
         "waketimed] Starting worker thread.",
-        "Nearest possible suspend:",
     ])?;
-    supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
+    supervisor.wait_for_stderr("not in the list of configured allowed chassis types")?;
+    supervisor.wait_for_stderr("Engine entering state 'Disabled'.")?;
     supervisor.terminate()?;
     supervisor.wait_for_stderr_unordered(&[
         "waketimed] Joining signal thread.",

@@ -29,6 +29,13 @@ pub struct Config {
     // exact times of falling asleep), but consume less CPU.
     #[serde(default = "default_poll_variable_interval")]
     pub poll_variable_interval: u64,
+    // Chassis types where waketimed should normally operate. If
+    // launched on a chassis type not in the list, waketimed should
+    // enter disabled mode (not performing any actions until restart).
+    // Special value "all" can be put into the list to indicate that
+    // all chassis types are allowed.
+    #[serde(default = "default_allowed_chassis_types")]
+    pub allowed_chassis_types: Vec<String>,
     // Test mode prevents waketimed from actually suspending the
     // system.
     #[serde(default = "default_test_mode")]
@@ -141,6 +148,9 @@ fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
     if let Ok(value) = env::var("WAKETIMED_POLL_VARIABLE_INTERVAL") {
         cfg.poll_variable_interval = value.parse::<u64>()?;
     }
+    if let Ok(value) = env::var("WAKETIMED_ALLOWED_CHASSIS_TYPES") {
+        cfg.allowed_chassis_types = value.split(',').map(|s| s.to_string()).collect();
+    }
     if let Ok(value) = env::var("WAKETIMED_TEST_MODE") {
         cfg.test_mode = value.parse::<bool>()?;
     }
@@ -175,6 +185,16 @@ fn default_stayup_cleared_awake_time() -> u64 {
 
 fn default_poll_variable_interval() -> u64 {
     3_000
+}
+
+fn default_allowed_chassis_types() -> Vec<String> {
+    vec![
+        "convertible".to_string(),
+        "embedded".to_string(),
+        "handset".to_string(),
+        "tablet".to_string(),
+        "watch".to_string(),
+    ]
 }
 
 fn default_test_mode() -> bool {

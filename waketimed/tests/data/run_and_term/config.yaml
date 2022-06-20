@@ -1,4 +1,6 @@
 log: waketimed=trace
+allowed_chassis_types:
+  - all
 state_dir: tests/data/run_and_term/state
 dist_dir: tests/data/run_and_term/dist
 startup_awake_time: 50
