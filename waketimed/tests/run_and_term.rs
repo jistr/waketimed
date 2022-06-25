@@ -14,7 +14,11 @@ fn test_run_and_term() -> Result<(), AnyError> {
     supervisor.wait_for_stderr_unordered(&[
         "waketimed] Starting signal thread.",
         "waketimed] Starting worker thread.",
+        "Using rule_def directories: [\"tests/data/run_and_term/dist/rule_def\"].",
         "Using var_def directories: [\"tests/data/run_and_term/dist/var_def\", \"tests/data/run_and_term/state/var_def\"].",
+        "Using var_def directories: [\"tests/data/run_and_term/dist/var_def\", \"tests/data/run_and_term/state/var_def\"].",
+        "Overriden var def paths: [\"tests/data/run_and_term/dist/var_def/test_masked.yaml\"]",
+        "Var def 'tests/data/run_and_term/state/var_def/test_masked.yaml' is void.",
         "Nearest possible suspend:",
     ])?;
     supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
