@@ -11,10 +11,6 @@ fn test_run_with_dist() -> Result<(), AnyError> {
     cmd.env("WAKETIMED_CONFIG", "tests/data/run_with_dist/config.yaml");
     let wtd_proc = cmd.spawn().context("Failed to spawn waketimed process.")?;
     let mut supervisor = helpers::Supervisor::new(wtd_proc);
-    supervisor.wait_for_stderr_unordered(&[
-        "waketimed] Starting signal thread.",
-        "waketimed] Starting worker thread.",
-    ])?;
     supervisor.wait_for_stderr("Using rule_def directories: [\"data/dist/rule_def\"].")?;
     supervisor.wait_for_stderr_unordered(&[
         "Loading rule def 'data/dist/rule_def/wtd_sleep_block_inhibited.yaml'.",

@@ -11,10 +11,6 @@ fn test_run_and_term() -> Result<(), AnyError> {
     cmd.env("WAKETIMED_CONFIG", "tests/data/run_and_term/config.yaml");
     let wtd_proc = cmd.spawn().context("Failed to spawn waketimed process.")?;
     let mut supervisor = helpers::Supervisor::new(wtd_proc);
-    supervisor.wait_for_stderr_unordered(&[
-        "waketimed] Starting signal thread.",
-        "waketimed] Starting worker thread.",
-    ])?;
     supervisor.wait_for_stderr("Using rule_def directories: [\"tests/data/run_and_term/dist/rule_def\", \"tests/data/run_and_term/state/rule_def\"].")?;
     supervisor.wait_for_stderr(
         "Overriden rule def paths: [\"tests/data/run_and_term/dist/rule_def/test_masked.yaml\"]",
