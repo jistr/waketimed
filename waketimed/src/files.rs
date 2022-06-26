@@ -15,11 +15,22 @@ pub fn load_rule_defs(cfg: &Config) -> Result<HashMap<RuleName, RuleDef>, AnyErr
     let rule_def_dirs_existing = into_existing_dirs(rule_def_dirs)?;
     debug!("Using rule_def directories: {:?}.", &rule_def_dirs_existing);
     let rule_def_paths = list_yaml_files_in_dirs(&rule_def_dirs_existing)?;
+    let (unique_paths, overriden_paths) = unique_and_overriden_paths_from(rule_def_paths)?;
+    if !overriden_paths.is_empty() {
+        debug!("Overriden rule def paths: {:?}", overriden_paths);
+    }
     let mut rule_defs = HashMap::new();
-    for def_path in rule_def_paths.iter() {
+    for def_path in unique_paths.iter() {
         debug!("Loading rule def '{}'.", def_path.display());
         let rule_def = parse_rule_def(&def_path)?;
-        rule_defs.insert(rule_def.name().clone(), rule_def);
+        match rule_def {
+            Some(def) => {
+                rule_defs.insert(def.name().clone(), def);
+            }
+            None => {
+                debug!("Rule def '{}' is void.", def_path.display());
+            }
+        }
     }
     Ok(rule_defs)
 }
@@ -49,8 +60,7 @@ pub fn load_var_defs(cfg: &Config) -> Result<HashMap<VarName, VarDef>, AnyError>
     Ok(var_defs)
 }
 
-fn parse_rule_def<P: AsRef<Path>>(def_path: P) -> Result<RuleDef, AnyError> {
-    // TODO masking
+fn parse_rule_def<P: AsRef<Path>>(def_path: P) -> Result<Option<RuleDef>, AnyError> {
     let raw_name = def_path
         .as_ref()
         .file_stem()
@@ -61,9 +71,12 @@ fn parse_rule_def<P: AsRef<Path>>(def_path: P) -> Result<RuleDef, AnyError> {
                 def_path.as_ref().display()
             )
         })?;
-    // FIXME remove the unwrap and return Option<RuleDef>
-    let mut rule_def: RuleDef = parse_yaml_file_unless_empty(&def_path)?.unwrap();
-    rule_def.name = Some(RuleName::try_from(raw_name.to_string())?);
+    let rule_name = RuleName::try_from(raw_name.to_string())?;
+    let rule_def: Option<RuleDef> = parse_yaml_file_unless_empty(&def_path)?;
+    let rule_def = rule_def.map(|mut def| {
+        def.name = Some(rule_name);
+        def
+    });
     Ok(rule_def)
 }
 

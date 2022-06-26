@@ -1,6 +1,4 @@
 data_type: bool
-# categories:
-#   - test_category
 kind:
   builtin_poll:
     builtin_name: test_poll_bool
