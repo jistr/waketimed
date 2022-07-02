@@ -30,9 +30,11 @@ impl LoginSeatBusyFns {
 impl PollVarFns for LoginSeatBusyFns {
     async fn poll(&mut self) -> Option<VarValue> {
         let system_dbus_conn = self.system_dbus_conn.clone();
-        // NOTE: It would probably be better to query all seats
-        // and check them all rather than hardcode "seat0".
-        // Hardcoding seems to work fine for now though.
+        // NOTE: It's unclear whether there's any practical use to
+        // look up multiple seats. For now we assume a single seat
+        // device. Manual for sd-login.h states that seat0 always
+        // exists.
+        // https://www.freedesktop.org/software/systemd/man/sd-login.html
         let idle_hint_res = system_dbus_conn
             .call_method(
                 Some("org.freedesktop.login1"),
