@@ -1,0 +1,5 @@
+data_type: bool
+kind:
+  category_any:
+    category_name: wtd_call_present
+    default_value: false

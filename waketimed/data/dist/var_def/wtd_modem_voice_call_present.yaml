@@ -1,0 +1,6 @@
+data_type: bool
+categories:
+  - wtd_call_present
+kind:
+  builtin_poll:
+    builtin_name: modem_voice_call_present

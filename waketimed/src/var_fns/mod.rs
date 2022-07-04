@@ -42,6 +42,9 @@ fn new_builtin_poll_var_fns(
         "sleep_block_inhibited" => Ok(Box::new(
             poll::sleep_block_inhibited::SleepBlockInhibitedFns::new(&bp_def.params, context)?,
         )),
+        "modem_voice_call_present" => Ok(Box::new(
+            poll::modem_voice_call_present::ModemVoiceCallPresentFns::new(&bp_def.params, context)?,
+        )),
 
         "test_poll_bool" => Ok(Box::new(poll::test_poll_bool::TestPollBoolFns::new(
             &bp_def.params,
