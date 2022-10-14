@@ -3,7 +3,7 @@
 These are variables built into waketimed, available for use within
 rule definitions.
 
-# Category boolean variables
+## Category boolean variables
 
 Category boolean variables group one or more other boolean variables
 together. The category variable is `true` when any variable within the
@@ -16,7 +16,7 @@ category is `true`, otherwise the category variable is `false`.
 * `wtd_user_busy: bool` – `true` if the user is interacting with the
   device in some way.
 
-# Leaf variables
+## Leaf variables
 
 These "leaf" variables are set based on inspection of the device
 state.
