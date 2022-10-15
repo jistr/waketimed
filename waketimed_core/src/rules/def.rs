@@ -5,6 +5,7 @@ use serde_derive::{Deserialize, Serialize};
 pub struct RuleDef {
     #[serde(skip)]
     pub name: Option<RuleName>,
+    #[serde(with = "serde_yaml::with::singleton_map")]
     pub kind: RuleKind,
 }
 

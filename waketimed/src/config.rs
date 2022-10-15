@@ -1,4 +1,4 @@
-use anyhow::{Context, Error as AnyError};
+use anyhow::{anyhow, Context, Error as AnyError};
 use log::debug;
 use serde_derive::{Deserialize, Serialize};
 
@@ -14,16 +14,12 @@ pub struct Config {
     // Log level.
     #[serde(default = "default_log")]
     pub log: String,
-    // Directory writable for the daemon, where its state is stored.
-    // Contains custom rules definitions, enabled status of any rules
-    // (custom or builtin), and tracking of fulfillment of individual
-    // rules. This is also the working directory of the daemon.
-    #[serde(default = "default_state_dir")]
-    pub state_dir: String,
-    // Directory with files distributed and upgraded together with the
-    // waketimed binary. Contains built-in rule definitions.
-    #[serde(default = "default_dist_dir")]
-    pub dist_dir: String,
+    // Directory with extra config files for the daemon. Can contain
+    // custom rules and variables. If specified as relative path, it
+    // is interpreted relative to the waketimed process working
+    // directory. It is recommended to specify absolute paths.
+    #[serde(default = "default_config_dir")]
+    pub config_dir: String,
     // Time between re-checking poll-based variables, in milliseconds.
     // Larger values mean less exact times of updating variables (less
     // exact times of falling asleep), but consume less CPU.
@@ -36,10 +32,6 @@ pub struct Config {
     // all chassis types are allowed.
     #[serde(default = "default_allowed_chassis_types")]
     pub allowed_chassis_types: Vec<String>,
-    // Test mode prevents waketimed from actually suspending the
-    // system.
-    #[serde(default = "default_test_mode")]
-    pub test_mode: bool,
 
     // Time to stay up (prevent sleep) after waketimed starts, in
     // seconds. Results in automatic creation of a "stay up until"
@@ -57,44 +49,54 @@ pub struct Config {
     // without sending out any "sleep approaching" signals.
     #[serde(default = "default_stayup_cleared_awake_time")]
     pub stayup_cleared_awake_time: u64,
+
+    // Test mode prevents waketimed from actually suspending the
+    // system.
+    #[serde(default = "default_test_mode")]
+    pub test_mode: bool,
+    // Test variable to prevent loading builtin rule defs and var
+    // defs.
+    #[serde(default = "default_test_skip_embedded_defs")]
+    pub test_skip_embedded_defs: bool,
 }
 
 impl Config {
-    #[allow(dead_code)]
-    pub fn state_dir(&self) -> PathBuf {
-        PathBuf::from(&self.state_dir)
+    pub fn config_dir(&self) -> Option<PathBuf> {
+        if self.config_dir.is_empty() {
+            None
+        } else {
+            Some(PathBuf::from(&self.config_dir))
+        }
     }
 
-    pub fn local_rule_def_dir(&self) -> PathBuf {
-        let mut path = PathBuf::from(&self.state_dir);
-        path.push("rule_def");
-        path
+    pub fn config_rule_def_dir(&self) -> Option<PathBuf> {
+        self.config_dir().map(|dir| dir.join("rule_def"))
     }
 
-    pub fn local_var_def_dir(&self) -> PathBuf {
-        let mut path = PathBuf::from(&self.state_dir);
-        path.push("var_def");
-        path
-    }
-
-    pub fn dist_rule_def_dir(&self) -> PathBuf {
-        let mut path = PathBuf::from(&self.dist_dir);
-        path.push("rule_def");
-        path
-    }
-
-    pub fn dist_var_def_dir(&self) -> PathBuf {
-        let mut path = PathBuf::from(&self.dist_dir);
-        path.push("var_def");
-        path
+    pub fn config_var_def_dir(&self) -> Option<PathBuf> {
+        self.config_dir().map(|dir| dir.join("var_def"))
     }
 
     pub fn rule_def_dirs(&self) -> Vec<PathBuf> {
-        vec![self.dist_rule_def_dir(), self.local_rule_def_dir()]
+        let mut dirs = Vec::new();
+        if !self.test_skip_embedded_defs {
+            dirs.push(PathBuf::from(crate::embedded_files::PREFIX_RULE_DEF));
+        }
+        if let Some(dir) = self.config_rule_def_dir() {
+            dirs.push(dir);
+        }
+        dirs
     }
 
     pub fn var_def_dirs(&self) -> Vec<PathBuf> {
-        vec![self.dist_var_def_dir(), self.local_var_def_dir()]
+        let mut dirs = Vec::new();
+        if !self.test_skip_embedded_defs {
+            dirs.push(PathBuf::from(crate::embedded_files::PREFIX_VAR_DEF));
+        }
+        if let Some(dir) = self.config_var_def_dir() {
+            dirs.push(dir);
+        }
+        dirs
     }
 }
 
@@ -119,7 +121,7 @@ pub fn load() -> Result<Config, AnyError> {
     };
 
     populate_config_from_env(&mut cfg)?;
-    repair_config(&mut cfg)?;
+    check_and_repair_config(&mut cfg)?;
 
     Ok(cfg)
 }
@@ -135,6 +137,9 @@ pub fn log_config(cfg: &Config) -> Result<(), AnyError> {
 fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
     if let Ok(value) = env::var("WAKETIMED_LOG") {
         cfg.log = value;
+    }
+    if let Ok(value) = env::var("WAKETIMED_CONFIG_DIR") {
+        cfg.config_dir = value;
     }
     if let Ok(value) = env::var("WAKETIMED_STARTUP_AWAKE_TIME") {
         cfg.startup_awake_time = value.parse::<u64>()?;
@@ -154,21 +159,45 @@ fn populate_config_from_env(cfg: &mut Config) -> Result<(), AnyError> {
     if let Ok(value) = env::var("WAKETIMED_TEST_MODE") {
         cfg.test_mode = value.parse::<bool>()?;
     }
-    if let Ok(value) = env::var("WAKETIMED_STATE_DIR") {
-        cfg.state_dir = value;
-    }
-    if let Ok(value) = env::var("WAKETIMED_DIST_DIR") {
-        cfg.dist_dir = value;
+    if let Ok(value) = env::var("WAKETIMED_TEST_SKIP_EMBEDDED_DEFS") {
+        cfg.test_skip_embedded_defs = value.parse::<bool>()?;
     }
     Ok(())
 }
 
-fn repair_config(_cfg: &mut Config) -> Result<(), AnyError> {
+fn check_and_repair_config(cfg: &mut Config) -> Result<(), AnyError> {
+    check_config_dir(cfg)?;
+    Ok(())
+}
+
+fn check_config_dir(cfg: &Config) -> Result<(), AnyError> {
+    if cfg.config_dir == default_config_dir() {
+        return Ok(());
+    }
+
+    if let Some(dir) = cfg.config_dir() {
+        if !dir.exists() {
+            return Err(anyhow!(
+                "Non-default config dir '{}' specified, but it does not exist.",
+                cfg.config_dir
+            ));
+        }
+        if !dir.is_dir() {
+            return Err(anyhow!(
+                "Config dir '{}' is not a directory.",
+                cfg.config_dir
+            ));
+        }
+    }
     Ok(())
 }
 
 fn default_log() -> String {
     "info".to_string()
+}
+
+fn default_config_dir() -> String {
+    "/etc/waketimed".to_string()
 }
 
 fn default_startup_awake_time() -> u64 {
@@ -201,10 +230,6 @@ fn default_test_mode() -> bool {
     false
 }
 
-fn default_state_dir() -> String {
-    "/var/lib/waketimed".to_string()
-}
-
-fn default_dist_dir() -> String {
-    "/usr/lib/waketimed".to_string()
+fn default_test_skip_embedded_defs() -> bool {
+    false
 }

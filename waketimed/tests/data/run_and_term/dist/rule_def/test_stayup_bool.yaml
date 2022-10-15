@@ -1,4 +1,0 @@
-kind:
-  stayup_bool:
-    value_script: |
-      test_category && test_poll_true

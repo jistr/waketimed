@@ -1,9 +1,9 @@
 log: waketimed=trace
+config_dir: tests/data/run_and_term
 allowed_chassis_types:
   - all
-state_dir: tests/data/run_and_term/state
-dist_dir: tests/data/run_and_term/dist
 startup_awake_time: 50
 minimum_awake_time: 50
 stayup_cleared_awake_time: 10000
 poll_variable_interval: 100
+test_mode: true

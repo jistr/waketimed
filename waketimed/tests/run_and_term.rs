@@ -11,20 +11,20 @@ fn test_run_and_term() -> Result<(), AnyError> {
     cmd.env("WAKETIMED_CONFIG", "tests/data/run_and_term/config.yaml");
     let wtd_proc = cmd.spawn().context("Failed to spawn waketimed process.")?;
     let mut supervisor = helpers::Supervisor::new(wtd_proc);
-    supervisor.wait_for_stderr("Using rule_def directories: [\"tests/data/run_and_term/dist/rule_def\", \"tests/data/run_and_term/state/rule_def\"].")?;
+    supervisor.wait_for_stderr("Using rule_def directories: [\"/__WAKETIMED_EMBEDDED__/rule_def\", \"tests/data/run_and_term/rule_def\"].")?;
     supervisor.wait_for_stderr(
-        "Overriden rule def paths: [\"tests/data/run_and_term/dist/rule_def/test_masked.yaml\"]",
+        "Overriden rule def paths: [\"/__WAKETIMED_EMBEDDED__/rule_def/wtd_call_present.yaml\"]",
     )?;
     supervisor.wait_for_stderr_unordered(&[
-        "Rule def 'tests/data/run_and_term/state/rule_def/test_masked.yaml' is void.",
+        "Rule def 'tests/data/run_and_term/rule_def/wtd_call_present.yaml' is void.",
     ])?;
     supervisor.wait_for_stderr("Nearest possible suspend:")?;
-    supervisor.wait_for_stderr("Using var_def directories: [\"tests/data/run_and_term/dist/var_def\", \"tests/data/run_and_term/state/var_def\"].")?;
+    supervisor.wait_for_stderr("Using var_def directories: [\"/__WAKETIMED_EMBEDDED__/var_def\", \"tests/data/run_and_term/var_def\"].")?;
     supervisor.wait_for_stderr(
-        "Overriden var def paths: [\"tests/data/run_and_term/dist/var_def/test_masked.yaml\"]",
+        "Overriden var def paths: [\"/__WAKETIMED_EMBEDDED__/var_def/wtd_modem_voice_call_present.yaml\"]",
     )?;
     supervisor.wait_for_stderr_unordered(&[
-        "Var def 'tests/data/run_and_term/state/var_def/test_masked.yaml' is void.",
+        "Var def 'tests/data/run_and_term/var_def/wtd_modem_voice_call_present.yaml' is void.",
     ])?;
     supervisor.wait_for_stderr("Engine entering state 'Running'.")?;
     supervisor.wait_for_stderr_unordered(&[

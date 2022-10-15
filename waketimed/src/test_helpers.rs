@@ -10,16 +10,15 @@ pub fn default_config() -> Config {
 
 pub fn run_and_term_config() -> Config {
     let mut cfg = default_config();
-    cfg.state_dir = format!(
-        "{}/tests/data/run_and_term/state",
-        env!("CARGO_MANIFEST_DIR"),
-    );
-    cfg.state_dir = format!(
-        "{}/tests/data/run_and_term/dist",
-        env!("CARGO_MANIFEST_DIR"),
-    );
+    cfg.config_dir = format!("{}/tests/data/run_and_term", env!("CARGO_MANIFEST_DIR"),);
     cfg.test_mode = true;
     cfg.poll_variable_interval = 100;
+    cfg
+}
+
+pub fn run_and_term_without_builtin_defs_config() -> Config {
+    let mut cfg = run_and_term_config();
+    cfg.test_skip_embedded_defs = true;
     cfg
 }
 

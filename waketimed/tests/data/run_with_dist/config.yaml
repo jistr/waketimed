@@ -1,6 +1,6 @@
 log: waketimed=trace
+config_dir:
 allowed_chassis_types:
   - all
-state_dir: tests/data/run_with_dist/state
-dist_dir: data/dist
 poll_variable_interval: 100
+test_mode: true

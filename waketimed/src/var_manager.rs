@@ -166,7 +166,7 @@ impl VarManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_helpers::{run_and_term_config, var_name};
+    use crate::test_helpers::{run_and_term_without_builtin_defs_config, var_name};
     use tokio::sync::mpsc::UnboundedReceiver;
 
     fn create_var_manager(cfg: Config) -> (VarManager, UnboundedReceiver<WorkerMsg>) {
@@ -177,12 +177,13 @@ mod tests {
 
     #[test]
     fn test_category_vars() {
-        let (mut mgr, _worker_recv) = create_var_manager(run_and_term_config());
+        let (mut mgr, _worker_recv) =
+            create_var_manager(run_and_term_without_builtin_defs_config());
         mgr.init().expect("Failed to init VarManager.");
         let test_category = var_name("test_category");
 
         // Test that category_vars map was computed correctly.
-        assert_eq!(mgr.category_vars.len(), 1);
+        assert_eq!(mgr.category_vars.len(), 1, "{:?}", mgr.category_vars);
         let test_category_vars = mgr
             .category_vars
             .get(&test_category)

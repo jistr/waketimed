@@ -7,9 +7,11 @@ use std::collections::HashMap;
 pub struct VarDef {
     #[serde(skip)]
     pub name: Option<VarName>,
+    #[serde(with = "serde_yaml::with::singleton_map")]
     pub data_type: VarDataType,
     #[serde(default)]
     pub categories: Vec<VarName>,
+    #[serde(with = "serde_yaml::with::singleton_map")]
     pub kind: VarKind,
 }
 

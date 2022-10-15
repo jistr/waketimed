@@ -2,6 +2,7 @@ extern crate waketimed_core as wtd_core;
 
 pub(crate) mod chassis_check;
 mod config;
+pub(crate) mod embedded_files;
 mod engine;
 pub(crate) mod files;
 pub(crate) mod messages;

@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::embedded_files;
 use anyhow::{anyhow, Context, Error as AnyError};
 use log::debug;
 use serde::de::DeserializeOwned;
@@ -103,6 +104,30 @@ fn parse_var_def<P: AsRef<Path>>(def_path: P) -> Result<Option<VarDef>, AnyError
 fn parse_yaml_file_unless_empty<T: DeserializeOwned, P: AsRef<Path>>(
     file_path: P,
 ) -> Result<Option<T>, AnyError> {
+    if file_path.as_ref().starts_with(embedded_files::PREFIX) {
+        parse_embedded_yaml_file_unless_empty(file_path)
+    } else {
+        parse_real_yaml_file_unless_empty(file_path)
+    }
+}
+
+fn parse_embedded_yaml_file_unless_empty<T: DeserializeOwned, P: AsRef<Path>>(
+    file_path: P,
+) -> Result<Option<T>, AnyError> {
+    let data = embedded_files::embedded_file_data(file_path.as_ref())?;
+    if data.len() == 0 {
+        return Ok(None);
+    }
+
+    let data_string = String::from_utf8_lossy(&*data);
+    let parsed: T = serde_yaml::from_str(&data_string)
+        .with_context(|| format!("Cannot parse file '{}'", file_path.as_ref().display(),))?;
+    Ok(Some(parsed))
+}
+
+fn parse_real_yaml_file_unless_empty<T: DeserializeOwned, P: AsRef<Path>>(
+    file_path: P,
+) -> Result<Option<T>, AnyError> {
     let mut reader = BufReader::new(
         File::open(&file_path)
             .with_context(|| format!("Cannot read file '{}'", file_path.as_ref().display(),))?,
@@ -119,6 +144,11 @@ fn parse_yaml_file_unless_empty<T: DeserializeOwned, P: AsRef<Path>>(
 fn into_existing_dirs(dirs: Vec<PathBuf>) -> Result<Vec<PathBuf>, AnyError> {
     let mut existing_dirs = Vec::new();
     for dir in dirs.into_iter() {
+        if embedded_files::EXISTING_DIRS.contains(&&*dir.to_string_lossy()) {
+            existing_dirs.push(dir);
+            continue;
+        }
+
         // NOTE: When Path.try_exists is stabilized, it can be used instead.
         let read_dir = dir.as_path().read_dir();
         let exists = match read_dir {
@@ -144,29 +174,51 @@ fn into_existing_dirs(dirs: Vec<PathBuf>) -> Result<Vec<PathBuf>, AnyError> {
 }
 
 fn list_yaml_files_in_dirs<P: AsRef<Path>>(dirs: &[P]) -> Result<Vec<PathBuf>, AnyError> {
-    let read_dirs: Result<Vec<ReadDir>, AnyError> = dirs
-        .iter()
-        .map(|d| {
-            d.as_ref()
-                .read_dir()
-                .with_context(|| format!("Failed to read directory '{}'", d.as_ref().display()))
-        })
-        .collect();
-    let all_entries = read_dirs?.into_iter().flatten();
-    let yaml_paths: Result<Vec<PathBuf>, AnyError> = all_entries
-        .filter_map(|res_entry| match res_entry {
-            Ok(entry) => {
-                let path = entry.path();
-                if path.extension() == Some("yaml".as_ref()) {
-                    Some(Ok(path))
-                } else {
-                    None
-                }
+    let all_paths = dirs_entry_paths(dirs)?;
+    let yaml_paths: Result<Vec<PathBuf>, AnyError> = all_paths
+        .into_iter()
+        .filter_map(|path| {
+            if path.extension() == Some("yaml".as_ref()) {
+                Some(Ok(path))
+            } else {
+                None
             }
-            Err(e) => Some(Err(AnyError::from(e))),
         })
         .collect();
     yaml_paths
+}
+
+fn dirs_entry_paths<P: AsRef<Path>>(dirs: &[P]) -> Result<Vec<PathBuf>, AnyError> {
+    let entries: Result<Vec<Vec<PathBuf>>, AnyError> = dirs
+        .iter()
+        .map(|d| {
+            let dir_path = d.as_ref();
+            if dir_path.starts_with(embedded_files::PREFIX) {
+                embedded_files::embedded_dir_entry_paths(d)
+            } else {
+                real_dir_entry_paths(d)
+            }
+        })
+        .collect();
+    Ok(entries?.into_iter().flatten().collect())
+}
+
+fn real_dir_entry_paths<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, AnyError> {
+    let entries: ReadDir = dir
+        .as_ref()
+        .read_dir()
+        .with_context(|| format!("Failed to read directory '{}'", dir.as_ref().display()))?;
+    entries
+        .into_iter()
+        .map(|entry_res| {
+            entry_res.map(|e| e.path()).with_context(|| {
+                format!(
+                    "Failed list files in directory '{}'",
+                    dir.as_ref().display()
+                )
+            })
+        })
+        .collect()
 }
 
 // Consumes a vec of paths, returns two vecs. First vec contains all
