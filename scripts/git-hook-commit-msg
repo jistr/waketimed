@@ -3,3 +3,12 @@
 LINT_COMMIT_MESSAGE_SCRIPT=$(git rev-parse --show-toplevel)/scripts/lint-commit-message.sh
 
 cat "$1" | $LINT_COMMIT_MESSAGE_SCRIPT
+
+if [ "$?" != 0 ]; then
+    echo ""
+    echo "===== COMMIT FAILED ====="
+    echo ""
+    echo "To try committing again and recover your commit message, run:"
+    echo "git commit -eF .git/COMMIT_EDITMSG"
+    exit 1
+fi
