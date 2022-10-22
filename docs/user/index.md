@@ -1,4 +1,4 @@
-# waketimed usage documentation
+# waketimed user documentation
 
 * [How waketimed works](how-waketimed-works.md)
 

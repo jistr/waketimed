@@ -1,10 +1,12 @@
 # waketimed
 
+## Project goal
+
 **Waketimed is a daemon for managing the sleep/wake cycle of Linux
 phones and similar devices. It aims to keep the device sleeping as
 much as possible to preserve battery life.**
 
-## Status
+## Implementation status
 
 When using waketimed currently, please be aware that **it's in early
 development phase**. The design and feature set are being figured out.
@@ -37,4 +39,4 @@ rather short time (10 seconds by default).
 
 ## Documentation
 
-**[waketimed usage documentation](docs/usage/index.md)**
+**[waketimed user documentation](docs/user/index.md)**
