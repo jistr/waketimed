@@ -1,3 +1,5 @@
+[parent page](../index.md)
+
 # Variables and rules
 
 * [Included variables](included-variables.md)

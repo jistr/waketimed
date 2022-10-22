@@ -1,3 +1,5 @@
+[parent page](index.md)
+
 # Overriding and masking of variables and rules
 
 The variable and rule definitions which are built into waketimed are

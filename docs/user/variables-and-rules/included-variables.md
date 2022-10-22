@@ -1,3 +1,5 @@
+[parent page](index.md)
+
 # Included variables
 
 These are variables built into waketimed, available for use within

@@ -1,3 +1,5 @@
+[parent page](index.md)
+
 # Included stay-up rules
 
 These are stay-up rules built into waketimed by default.

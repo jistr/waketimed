@@ -1,3 +1,5 @@
+[parent page](index.md)
+
 # How waketimed works
 
 Waketimed is a daemon. It monitors various properties of the system,

@@ -1,3 +1,5 @@
+[parent page](../index.md)
+
 # Configuration
 
 Waketimed attempts to load its configuration during startup from **a
