@@ -2,6 +2,8 @@
 
 # How waketimed works
 
+## Overview
+
 Waketimed is a daemon. It monitors various properties of the system,
 and maintains a set of internal variables based on the observed state.
 A set of *stay-up rules* is defined, each rule referencing one or more
@@ -14,3 +16,22 @@ after a short period of time.
 > which would be able to use the same internal variables to
 > dynamically compute desired periods in which the system would be
 > woken up.
+
+## Variable definitions
+
+Variables are described in YAML format. Some variable definitions are
+[built into the daemon executable](https://github.com/jistr/waketimed/tree/main/waketimed/embed/var_def),
+and additional ones may be specified inside the configuration
+directory, by default under `/etc/waketimed/var_def`.
+
+See also [variables and rules](variables-and-rules/index.md).
+
+## Rule definitions
+
+Stay-up rules are described in YAML format. Some stay-up rule
+definitions are
+[built into the daemon executable](https://github.com/jistr/waketimed/tree/main/waketimed/embed/rule_def),
+and additional ones may be specified inside the configuration
+directory, by default under `/etc/waketimed/rule_def`.
+
+See also [variables and rules](variables-and-rules/index.md).

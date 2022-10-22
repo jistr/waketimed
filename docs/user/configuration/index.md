@@ -8,8 +8,8 @@ precedence over the configuration file. If a configuration option is
 not set via either a file or an environment variable, default value
 (compiled into waketimed) is used.
 
-**Waketimed should operate sanely even in absence of any configuration
-file / environment variables.**
+**In simplest use cases, waketimed should operate sanely even in
+absence of any configuration file / environment variables.**
 
 ## Configuration file
 
@@ -36,22 +36,14 @@ contain an incomplete set of config options.
   Default: `"info"`  
   Environment variable: `WAKETIMED_LOG`
 
-* `state_dir` – Directory customizable by the admin and writable by
-  the waketimed daemon. Contains custom rule and variable definitions,
-  and in the future may contain daemon state.
+* `config_dir` – Directory that contains custom rule and variable
+  definitions. Rule definitions are searched for in the `rule_def`
+  subdirectory of the config directory, and variable definitions are
+  searched for in the `var_def` subdirectory.
 
   Type: string  
-  Default: `"/var/lib/waketimed"`  
-  Environment variable: `WAKETIMED_STATE_DIR`
-
-* `dist_dir` – Directory with files distributed and upgraded together
-  with the waketimed daemon. Contains built-in variable and rule
-  definitions. Should be treated as read-only except for waketimed
-  installation/upgrade procedure.  
-
-  Type: string  
-  Default: `"/usr/lib/waketimed"`  
-  Environment variable: `WAKETIMED_DIST_DIR`
+  Default: `"/etc/waketimed"`  
+  Environment variable: `WAKETIMED_CONFIG_DIR`
 
 * `allowed_chassis_types` – List of 
   [chassis types](https://www.freedesktop.org/software/systemd/man/machine-info.html#CHASSIS=)
@@ -120,3 +112,11 @@ contain an incomplete set of config options.
   Type: boolean  
   Default: `false`  
   Environment variable: `WAKETIMED_TEST_MODE`
+
+* `test_skip_embedded_defs` – When `true`, waketimed will skip loading
+  rule and variable definitions which are built into the waketimed
+  binary.
+
+  Type: boolean  
+  Default: `false`  
+  Environment variable: `WAKETIMED_TEST_SKIP_EMBEDDED_DEFS`
