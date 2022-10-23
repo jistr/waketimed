@@ -1,0 +1,43 @@
+name: test_suite
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  test_suite:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dorny/paths-filter@v2
+        id: files_changed
+        with:
+          filters: |
+            toolbox:
+              - toolbox/**
+
+      - if: steps.files_changed.outputs.toolbox != 'true'
+        name: Pull toolbox container image
+        run: |
+          TAG=main
+          podman pull "${{ secrets.TOOLBOX_REGISTRY_IMAGE }}:$TAG"
+          podman tag "${{ secrets.TOOLBOX_REGISTRY_IMAGE }}:$TAG" localhost/waketimed_toolbox_builder:latest
+
+      - if: steps.files_changed.outputs.toolbox == 'true'
+        name: Build toolbox container image
+        run: make toolbox-build
+
+      - name: Run lints
+        run: ./tbx make lint
+
+      - name: Run unit tests
+        run: ./tbx make test-unit
+
+      - name: Run integration tests
+        run: ./tbx make test-int

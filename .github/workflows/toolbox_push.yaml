@@ -1,0 +1,32 @@
+name: toolbox_push
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+    branches:
+      - main
+
+jobs:
+  toolbox_push:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check that ref is a branch
+        run: |
+          [[ "${{ github.ref }}" =~ "^refs/heads/" ]]
+
+      - name: Build toolbox image
+        run: make toolbox-build
+
+      - name: Login to container registry
+        run: |
+          TOOLBOX_REGISTRY_PASSWORD=${{ secrets.TOOLBOX_REGISTRY_PASSWORD }}
+          podman login -u="${{ secrets.TOOLBOX_REGISTRY_USER }}" --password-stdin "${{ secrets.TOOLBOX_REGISTRY }}" <<< "$TOOLBOX_REGISTRY_PASSWORD"
+
+      - name: Push toolbox image
+        run: |
+          # TAG=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          TAG=main
+          podman tag localhost/waketimed_toolbox_builder:latest "${{ secrets.TOOLBOX_REGISTRY_IMAGE }}:$TAG"
+          podman push "${{ secrets.TOOLBOX_REGISTRY_IMAGE }}:$TAG"
