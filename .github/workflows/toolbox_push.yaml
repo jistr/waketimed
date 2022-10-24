@@ -14,7 +14,7 @@ jobs:
 
       - name: Check that ref is a branch
         run: |
-          [[ "${{ github.ref }}" =~ "^refs/heads/" ]]
+          [[ "${{ github.ref }}" =~ ^refs/heads/ ]]
 
       - name: Build toolbox image
         run: make toolbox-build
