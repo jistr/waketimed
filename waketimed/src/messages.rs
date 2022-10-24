@@ -1,13 +1,13 @@
 use wtd_core::vars::{VarDef, VarName, VarValue};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum EngineMsg {
     PollVarsTick,
     ReturnVarPoll(VarName, Option<VarValue>),
     Terminate,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum WorkerMsg {
     CallVarPoll(VarName),
     LoadPollVarFns(VarDef),
