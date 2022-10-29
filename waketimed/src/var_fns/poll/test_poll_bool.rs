@@ -1,10 +1,9 @@
+use crate::core::vars::{param_required, VarValue};
 use crate::var_fns::PollVarFns;
 use anyhow::Error as AnyError;
 use async_trait::async_trait;
 use serde_yaml::Value;
 use std::collections::HashMap;
-
-use wtd_core::vars::{param_required, VarValue};
 
 #[derive(Clone, Debug)]
 pub struct TestPollBoolFns {

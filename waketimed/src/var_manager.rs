@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::core::vars::{VarDef, VarKind, VarName, VarValue};
 use crate::files;
 use crate::messages::WorkerMsg;
 use anyhow::{anyhow, Error as AnyError};
@@ -7,7 +8,6 @@ use log::{debug, error, trace};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use tokio::sync::mpsc::UnboundedSender;
-use wtd_core::vars::{VarDef, VarKind, VarName, VarValue};
 
 #[derive(Getters)]
 pub struct VarManager {

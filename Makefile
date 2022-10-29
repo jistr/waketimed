@@ -74,24 +74,17 @@ fix-fmt:
 
 # TEST
 
-test: test-waketimed_core test-waketimed
+test: test-unit test-int
 
-test-unit: test-unit-waketimed_core test-unit-waketimed
+test-unit: test-unit-waketimed
 
 test-int: test-int-waketimed
-
-test-waketimed: test-unit-waketimed test-int-waketimed
 
 test-unit-waketimed:
 	cd waketimed && cargo test --bins
 
 test-int-waketimed:
 	cd waketimed && RUST_BACKTRACE=1 cargo test --test '*' $(WAKETIMED_TEST_INT_ARGS)
-
-test-waketimed_core: test-unit-waketimed_core
-
-test-unit-waketimed_core:
-	cd waketimed_core && cargo test --lib
 
 
 # TOOLBOX

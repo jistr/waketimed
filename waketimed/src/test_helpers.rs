@@ -1,6 +1,6 @@
 use crate::config::Config;
-use waketimed_core::rules::RuleName;
-use waketimed_core::vars::VarName;
+use crate::core::rules::RuleName;
+use crate::core::vars::VarName;
 
 pub fn default_config() -> Config {
     let mut cfg: Config = serde_yaml::from_str("{}").expect("Unable to create default Config.");

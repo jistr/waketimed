@@ -1,4 +1,6 @@
 use crate::config::Config;
+use crate::core::rules::{RuleDef, RuleKind, RuleName};
+use crate::core::vars::{VarName, VarValue};
 use crate::files;
 use anyhow::Error as AnyError;
 use log::{debug, trace, warn};
@@ -6,8 +8,6 @@ use rhai::{Dynamic as RhaiDynamic, Engine as RhaiEngine, Scope as RhaiScope, AST
 use std::rc::Rc;
 
 use std::collections::HashMap;
-use wtd_core::rules::{RuleDef, RuleKind, RuleName};
-use wtd_core::vars::{VarName, VarValue};
 
 pub struct RuleManager {
     cfg: Rc<Config>,

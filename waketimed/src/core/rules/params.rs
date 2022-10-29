@@ -3,6 +3,7 @@ use serde::de::DeserializeOwned;
 use serde_yaml::{from_value, Value};
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 pub fn param_required<T>(params: &HashMap<String, Value>, key: &str) -> Result<T, RuleError>
 where
     T: DeserializeOwned,
