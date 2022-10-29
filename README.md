@@ -23,6 +23,10 @@ sleep is implemented right now. If you want periodic system wake-ups
 in addition to wake-ups caused by the user or the modem, it is
 presently recommended to create a systemd timer.
 
+## Documentation
+
+**[waketimed user documentation](https://github.com/jistr/waketimed/blob/main/docs/user/index.md)**
+
 ## Context
 
 Without waketimed, Linux phones typically rely on automatic suspend
@@ -40,7 +44,3 @@ Waketimed allows you to have generous idle timers in the desktop
 environment, but once it detects the device is not being used (screen
 off, no active/ringing call etc.), it suspends the device after a
 rather short time (10 seconds by default).
-
-## Documentation
-
-**[waketimed user documentation](https://github.com/jistr/waketimed/blob/main/docs/user/index.md)**

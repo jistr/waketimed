@@ -9,7 +9,7 @@ OOMScoreAdjust=-500
 # ReadWritePaths=/opt/waketimed-devel/var
 # PrivateTmp=true
 
-Environment=WAKETIMED_CONFIG=/opt/waketimed-devel/etc/config.yaml
+Environment=WAKETIMED_CONFIG=/opt/waketimed-devel/config/config.yaml
 ExecStart=/opt/waketimed-devel/bin/waketimed
 
 [Install]

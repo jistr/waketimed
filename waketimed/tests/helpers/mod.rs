@@ -176,7 +176,7 @@ where
 {
     #[allow(clippy::mutex_atomic)]
     let finished_setter = Arc::new((Mutex::new(false), Condvar::new()));
-    let finished_waiter = (&finished_setter).clone();
+    let finished_waiter = finished_setter.clone();
     let join_handle = thread::spawn(move || {
         let res: R = func();
         let (s_lock, s_cvar) = &*finished_setter;

@@ -21,10 +21,9 @@ ssh $WAKETIMED_DEVICE_SSH mkdir -p "$BIN_DIR"
 ssh $WAKETIMED_DEVICE_SSH mkdir -p "$CONFIG_DIR"
 scp $PROJECT_DIR/target/$WAKETIMED_BUILD_PROFILE/waketimed $WAKETIMED_DEVICE_SSH:$BIN_DIR/waketimed
 if [ "${WAKETIMED_PUSH_CONFIG:-1}" = 1 ]; then
-    scp $PROJECT_DIR/waketimed/data/devel/config.yaml $WAKETIMED_DEVICE_SSH:$CONFIG_DIR/config.yaml
+    scp $PROJECT_DIR/waketimed/devel/config.yaml $WAKETIMED_DEVICE_SSH:$CONFIG_DIR/config.yaml
 fi
-scp $PROJECT_DIR/waketimed/data/devel/waketimed-devel.service $WAKETIMED_DEVICE_SSH:$SERVICE_PATH
-rsync -av --delete $PROJECT_DIR/waketimed/data/dist/ $WAKETIMED_DEVICE_SSH:$DIST_DIR
+scp $PROJECT_DIR/waketimed/devel/waketimed-devel.service $WAKETIMED_DEVICE_SSH:$SERVICE_PATH
 
 ssh $WAKETIMED_DEVICE_SSH chmod -R u=rwx,g=rX,o=rX "$BIN_DIR"
 ssh $WAKETIMED_DEVICE_SSH chmod -R u=rwX,g=rX,o=rX "$CONFIG_DIR"

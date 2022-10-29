@@ -12,7 +12,6 @@ use zbus::Connection as ZbusConnection;
 #[derive(Clone, Debug)]
 pub struct ModemVoiceCallPresentFns {
     system_dbus_conn: ZbusConnection,
-    voice_devices: Option<Vec<String>>,
 }
 
 impl ModemVoiceCallPresentFns {
@@ -22,7 +21,6 @@ impl ModemVoiceCallPresentFns {
     ) -> Result<Self, AnyError> {
         Ok(Self {
             system_dbus_conn: context.system_dbus_conn()?,
-            voice_devices: None,
         })
     }
 }
@@ -32,15 +30,11 @@ impl PollVarFns for ModemVoiceCallPresentFns {
     async fn poll(&mut self) -> Option<VarValue> {
         let system_dbus_conn = self.system_dbus_conn.clone();
 
-        if self.voice_devices.is_none() {
-            self.voice_devices = fetch_voice_devices(&system_dbus_conn).await;
-            trace!("List of voice devices: {:?}", self.voice_devices);
-        }
-        let voice_devices = if let Some(vd) = &self.voice_devices {
-            vd
-        } else {
-            return None;
-        };
+        // How a modem is referred to routinely changes during runtime, do not cache this.
+        // https://github.com/jistr/waketimed/issues/5
+        let voice_devices_opt = fetch_voice_devices(&system_dbus_conn).await;
+        trace!("List of voice devices: {:?}", voice_devices_opt);
+        let voice_devices = voice_devices_opt?;
 
         // Do something smarter when async_iter is stable:
         // https://doc.rust-lang.org/std/async_iter/index.html

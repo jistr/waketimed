@@ -19,17 +19,28 @@ after a short period of time.
 
 ## Variable definitions
 
-Variables are described in YAML format. Some variable definitions are
-[built into the daemon executable](https://github.com/jistr/waketimed/tree/main/waketimed/embed/var_def),
-and additional ones may be specified inside the configuration
-directory, by default under `/etc/waketimed/var_def`.
+Some variable definitions are built into the daemon executable. While
+their
+[descriptions are in YAML format](https://github.com/jistr/waketimed/tree/main/waketimed/embed/var_def),
+the actual
+[variable poll code is compiled from Rust](https://github.com/jistr/waketimed/tree/main/waketimed/src/var_fns/poll)
+and executed on a separate small thread pool through asynchronous runtime,
+making the polls performant yet light on resources.
+
+Additional variables may be specified inside the configuration
+directory, by default under `/etc/waketimed/var_def`. Currently this
+is not very useful, because scripting or external program execution
+from variables are not implemented.
 
 See also [variables and rules](variables-and-rules/index.md).
 
 ## Rule definitions
 
-Stay-up rules are described in YAML format. Some stay-up rule
-definitions are
+Stay-up rules are described in YAML format. The rules are evaluated
+using [Rhai](https://rhai.rs/) expressions/scripts which reference one
+or more of the waketimed variables.
+
+Some stay-up rule definitions are
 [built into the daemon executable](https://github.com/jistr/waketimed/tree/main/waketimed/embed/rule_def),
 and additional ones may be specified inside the configuration
 directory, by default under `/etc/waketimed/rule_def`.
