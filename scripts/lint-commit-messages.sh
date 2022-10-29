@@ -10,7 +10,7 @@ LINT_COMMITS_RANGE="2346e60e5e23e732240916df98294f48d23b82f7..HEAD"
 function lint_commits_in_range() {
     while read -r rev; do
         lint_commit "$rev"
-    done < <(git rev-list "$LINT_COMMITS_RANGE")
+    done < <(git rev-list --no-merges "$LINT_COMMITS_RANGE")
 }
 
 function lint_commit() {

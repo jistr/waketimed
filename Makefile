@@ -4,6 +4,11 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 CONTAINER_MGR ?= podman
 WAKETIMED_BUILD_PROFILE ?= --release
+WAKETIMED_INSTALL_PROFILE ?= release
+WAKETIMED_INSTALL_BIN_DIR ?= /usr/local/bin
+WAKETIMED_INSTALL_BIN_NAME ?= waketimed
+WAKETIMED_INSTALL_SERVICE_DIR ?= /etc/systemd/system
+WAKETIMED_INSTALL_SERVICE_NAME ?= waketimed.service
 WAKETIMED_TEST_INT_ARGS ?= -- --nocapture
 export WAKETIMED_BUS_ADDRESS ?= $(DBUS_SESSION_BUS_ADDRESS)
 
@@ -22,6 +27,11 @@ build-release-aarch64: export PKG_CONFIG_ALLOW_CROSS = 1
 build-release-aarch64: WAKETIMED_BUILD_PROFILE = --release --target aarch64-unknown-linux-gnu
 build-release-aarch64: cross-prep-cargo build
 
+install:
+	install -m 0755 target/$(WAKETIMED_INSTALL_PROFILE)/waketimed $(WAKETIMED_INSTALL_BIN_DIR)/$(WAKETIMED_INSTALL_BIN_NAME)
+
+install-service:
+	install -m 0644 config/systemd/waketimed.service $(WAKETIMED_INSTALL_SERVICE_DIR)/$(WAKETIMED_INSTALL_SERVICE_NAME)
 
 clean:
 	cargo clean

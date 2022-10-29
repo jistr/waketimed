@@ -1,0 +1,14 @@
+[Unit]
+Description=Sleep/wake cycle daemon
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/waketimed
+
+OOMScoreAdjust=-500
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target
