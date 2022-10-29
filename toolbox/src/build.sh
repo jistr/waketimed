@@ -13,6 +13,7 @@ dnf -y install \
     clippy \
     git \
     make \
+    openssl-devel \
     rustfmt \
 
 dnf clean all
