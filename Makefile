@@ -31,7 +31,7 @@ install:
 	install -m 0755 target/$(WAKETIMED_INSTALL_PROFILE)/waketimed $(WAKETIMED_INSTALL_BIN_DIR)/$(WAKETIMED_INSTALL_BIN_NAME)
 
 install-service:
-	install -m 0644 config/systemd/waketimed.service $(WAKETIMED_INSTALL_SERVICE_DIR)/$(WAKETIMED_INSTALL_SERVICE_NAME)
+	install -m 0644 waketimed/config/systemd/waketimed.service $(WAKETIMED_INSTALL_SERVICE_DIR)/$(WAKETIMED_INSTALL_SERVICE_NAME)
 
 clean:
 	cargo clean
