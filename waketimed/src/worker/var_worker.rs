@@ -1,3 +1,4 @@
+use crate::core::vars::{VarDef, VarName};
 use crate::messages::EngineMsg;
 use crate::var_creation_context::VarCreationContext;
 use crate::var_fns::{new_poll_var_fns, PollVarFns};
@@ -7,7 +8,6 @@ use std::collections::HashMap;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio::task::JoinHandle;
 use tokio::time::{self, Duration};
-use wtd_core::vars::{VarDef, VarName};
 use zbus::Connection as ZbusConnection;
 
 pub struct VarWorker {

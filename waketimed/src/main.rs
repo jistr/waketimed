@@ -1,7 +1,8 @@
-extern crate waketimed_core as wtd_core;
-
 pub(crate) mod chassis_check;
 mod config;
+// If we revive the idea of giving waketimed a dbus interface, core
+// will likely get moved into its own package.
+pub(crate) mod core;
 pub(crate) mod embedded_files;
 mod engine;
 pub(crate) mod files;

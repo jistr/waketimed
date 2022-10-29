@@ -31,7 +31,7 @@ install:
 	install -m 0755 target/$(WAKETIMED_INSTALL_PROFILE)/waketimed $(WAKETIMED_INSTALL_BIN_DIR)/$(WAKETIMED_INSTALL_BIN_NAME)
 
 install-service:
-	install -m 0644 config/systemd/waketimed.service $(WAKETIMED_INSTALL_SERVICE_DIR)/$(WAKETIMED_INSTALL_SERVICE_NAME)
+	install -m 0644 waketimed/config/systemd/waketimed.service $(WAKETIMED_INSTALL_SERVICE_DIR)/$(WAKETIMED_INSTALL_SERVICE_NAME)
 
 clean:
 	cargo clean
@@ -74,24 +74,17 @@ fix-fmt:
 
 # TEST
 
-test: test-waketimed_core test-waketimed
+test: test-unit test-int
 
-test-unit: test-unit-waketimed_core test-unit-waketimed
+test-unit: test-unit-waketimed
 
 test-int: test-int-waketimed
-
-test-waketimed: test-unit-waketimed test-int-waketimed
 
 test-unit-waketimed:
 	cd waketimed && cargo test --bins
 
 test-int-waketimed:
 	cd waketimed && RUST_BACKTRACE=1 cargo test --test '*' $(WAKETIMED_TEST_INT_ARGS)
-
-test-waketimed_core: test-unit-waketimed_core
-
-test-unit-waketimed_core:
-	cd waketimed_core && cargo test --lib
 
 
 # TOOLBOX

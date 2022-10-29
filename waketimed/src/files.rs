@@ -1,4 +1,6 @@
 use crate::config::Config;
+use crate::core::rules::{RuleDef, RuleName};
+use crate::core::vars::{VarDef, VarName};
 use crate::embedded_files;
 use anyhow::{anyhow, Context, Error as AnyError};
 use log::debug;
@@ -8,8 +10,6 @@ use std::ffi::OsString;
 use std::fs::{File, ReadDir};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
-use wtd_core::rules::{RuleDef, RuleName};
-use wtd_core::vars::{VarDef, VarName};
 
 pub fn load_rule_defs(cfg: &Config) -> Result<HashMap<RuleName, RuleDef>, AnyError> {
     let rule_def_dirs = cfg.rule_def_dirs();

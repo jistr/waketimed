@@ -1,8 +1,7 @@
+use crate::core::vars::{BuiltinPollDef, VarDef, VarKind, VarValue};
 use crate::var_creation_context::VarCreationContext;
 use anyhow::{anyhow, Error as AnyError};
 use async_trait::async_trait;
-
-use wtd_core::vars::{BuiltinPollDef, VarDef, VarKind, VarValue};
 
 pub mod poll;
 

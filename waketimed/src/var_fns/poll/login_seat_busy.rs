@@ -1,3 +1,4 @@
+use crate::core::vars::VarValue;
 use crate::var_creation_context::VarCreationContext;
 use crate::var_fns::PollVarFns;
 use anyhow::{anyhow, Error as AnyError};
@@ -7,7 +8,6 @@ use serde_yaml::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use wtd_core::vars::VarValue;
 use zbus::Connection as ZbusConnection;
 
 #[derive(Clone, Debug)]

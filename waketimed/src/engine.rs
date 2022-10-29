@@ -1,5 +1,6 @@
 use crate::chassis_check;
 use crate::config::Config;
+use crate::core::vars::{VarName, VarValue};
 use crate::messages::{EngineMsg, WorkerMsg};
 use crate::rule_manager::RuleManager;
 use crate::sleep_manager::SleepManager;
@@ -8,7 +9,6 @@ use anyhow::{Context, Error as AnyError};
 use log::{debug, error, info, trace, warn};
 use std::rc::Rc;
 use tokio::sync::mpsc::UnboundedSender;
-use wtd_core::vars::{VarName, VarValue};
 
 pub struct Engine {
     engine_send: UnboundedSender<EngineMsg>,

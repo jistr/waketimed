@@ -1,4 +1,4 @@
-use wtd_core::vars::{VarDef, VarName, VarValue};
+use crate::core::vars::{VarDef, VarName, VarValue};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum EngineMsg {
