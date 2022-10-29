@@ -1,3 +1,7 @@
+[![crates.io](https://img.shields.io/crates/v/waketimed.svg)](https://crates.io/crates/waketimed)
+[![license](https://img.shields.io/crates/l/waketimed.svg)](https://github.com/jistr/waketimed/blob/main/LICENSE)
+[![test suite](https://github.com/jistr/waketimed/actions/workflows/test_suite.yaml/badge.svg?branch=main)](https://github.com/jistr/waketimed/actions/workflows/test_suite.yaml)
+
 # waketimed
 
 ## Project goal
