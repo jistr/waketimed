@@ -12,6 +12,8 @@ Real-time clock suspend/wake-up scheduling daemon.
 keywords = ["power-management", "suspend", "sleep", "rtcwake", "linux", "linux-mobile"]
 edition = "2021"
 
+exclude = ["devel"]
+
 [[bin]]
 name = "waketimed"
 path = "src/main.rs"
