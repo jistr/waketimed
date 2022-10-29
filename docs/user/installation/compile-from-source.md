@@ -11,7 +11,7 @@ compiling on.
   On Mobian:
 
       ```
-      apt-get install cargo
+      sudo apt-get install cargo git make
       ```
 
 * **Get the code.**
