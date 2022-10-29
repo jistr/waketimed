@@ -1,4 +1,4 @@
-[parent page](../index.md)
+[parent page](index.md)
 
 # Compilation from source
 

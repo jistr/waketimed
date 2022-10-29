@@ -48,6 +48,8 @@ deps-update:
 doc:
 	cargo doc
 
+publish: lint test
+	cargo publish -p waketimed
 
 # LINT
 
