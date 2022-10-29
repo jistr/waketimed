@@ -39,4 +39,4 @@ rather short time (10 seconds by default).
 
 ## Documentation
 
-**[waketimed user documentation](docs/user/index.md)**
+**[waketimed user documentation](https://github.com/jistr/waketimed/blob/main/docs/user/index.md)**

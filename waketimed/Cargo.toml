@@ -2,15 +2,14 @@
 name = "waketimed"
 version = "0.5.0"
 authors = ["waketimed project contributors"]
-license = "MIT"
+license = "Apache-2.0"
 readme = "README.md"
-# repository = ""
-# documentation = ""
-# homepage = ""
+repository = "https://github.com/jistr/waketimed"
+documentation = "https://github.com/jistr/waketimed/blob/main/docs/user/index.md"
 description = """
 Real-time clock suspend/wake-up scheduling daemon.
 """
-keywords = ["suspend", "resume", "sleep", "wake", "rtc", "rtcwake"]
+keywords = ["power-management", "suspend", "sleep", "rtcwake", "linux", "linux-mobile"]
 edition = "2021"
 
 [[bin]]
