@@ -1,14 +1,12 @@
 use crate::config::Config;
 use crate::messages::WorkerMsg;
+use crate::time;
 use anyhow::Error as AnyError;
-use chrono::{DateTime, Utc};
+
 use log::debug;
-use nix::time::{clock_gettime, ClockId};
 use std::rc::Rc;
 use std::time::Duration;
 use tokio::sync::mpsc::UnboundedSender;
-
-const SUSPEND_CLOCK: ClockId = ClockId::CLOCK_BOOTTIME_ALARM;
 
 pub struct SleepManager {
     cfg: Rc<Config>,
@@ -54,7 +52,7 @@ impl SleepManager {
     }
 
     fn is_suspend_allowed(&self) -> Result<bool, AnyError> {
-        let now: Duration = clock_gettime(SUSPEND_CLOCK)?.into();
+        let now = time::now()?;
         Ok(now > self.nearest_possible_suspend && !self.stayup_active)
     }
 
@@ -62,23 +60,17 @@ impl SleepManager {
         &mut self,
         from_now: Duration,
     ) -> Result<(), AnyError> {
-        let now: Duration = clock_gettime(SUSPEND_CLOCK)?.into();
+        let now = time::now()?;
         let old_nearest_possible_suspend: Duration = self.nearest_possible_suspend;
         self.nearest_possible_suspend = self.nearest_possible_suspend.max(now + from_now);
         if old_nearest_possible_suspend != self.nearest_possible_suspend {
             debug!(
                 "Nearest possible suspend: {}",
-                clock_from_suspend_to_utc(self.nearest_possible_suspend)?
+                time::from_suspend_to_utc(self.nearest_possible_suspend)?
             );
         }
         Ok(())
     }
-}
-
-pub fn clock_from_suspend_to_utc(suspend_clock_time: Duration) -> Result<DateTime<Utc>, AnyError> {
-    let now: Duration = clock_gettime(SUSPEND_CLOCK)?.into();
-    let from_now = chrono::Duration::from_std(suspend_clock_time - now)?;
-    Ok(Utc::now() + from_now)
 }
 
 #[cfg(test)]
