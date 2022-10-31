@@ -89,9 +89,6 @@ contain an incomplete set of config options.
 * `minimum_awake_time` – Minimum time in milliseconds for which the
   device should stay awake after it has woken up.
 
-  > ⚠ Waketimed currently lacks detection of last wake up time, so
-  > this configuration setting has no effect for now.
-
   Type: integer  
   Default: `10000` (= 10 seconds)  
   Environment variable: `WAKETIMED_MINIMUM_AWAKE_TIME`
