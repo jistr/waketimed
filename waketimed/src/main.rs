@@ -11,6 +11,7 @@ pub(crate) mod rule_manager;
 pub(crate) mod sleep_manager;
 #[cfg(test)]
 pub(crate) mod test_helpers;
+pub(crate) mod time;
 pub(crate) mod var_creation_context;
 pub(crate) mod var_fns;
 pub(crate) mod var_manager;

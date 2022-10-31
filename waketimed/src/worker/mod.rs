@@ -42,6 +42,7 @@ impl Worker {
             }
             Suspend(test_mode) => self.sleep_worker.handle_suspend(test_mode).await,
             Terminate => {} // handled in the recv loop
+            WatchPrepareForSleep => self.sleep_worker.handle_watch_prepare_for_sleep().await,
         }
     }
 }

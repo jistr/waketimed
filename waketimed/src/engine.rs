@@ -58,6 +58,9 @@ impl Engine {
         self.rule_manager.init()?;
         self.sleep_manager.init()?;
         self.var_manager.init()?;
+        self.worker_send
+            .send(WorkerMsg::WatchPrepareForSleep)
+            .expect("Failed to send WorkerMsg::WatchPrepareForSleep");
         self.set_state(EngineState::Running);
         Ok(())
     }
@@ -86,6 +89,8 @@ impl Engine {
                 EngineMsg::ReturnVarPoll(var_name, opt_value) => {
                     self.handle_return_var_poll(var_name, opt_value)
                 }
+                EngineMsg::SystemIsResuming => self.sleep_manager.handle_system_is_resuming(),
+                EngineMsg::SystemIsSuspending => self.sleep_manager.handle_system_is_suspending(),
                 EngineMsg::Terminate => {
                     self.handle_terminate();
                 }

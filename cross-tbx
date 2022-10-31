@@ -29,7 +29,7 @@ while $CONTAINER_MGR inspect waketimed_cross_$IDX &> /dev/null; do
     ((IDX++))
 done || true
 
-mkdir -p $PROJECT_DIR/tmp/cargo
+mkdir -p $PROJECT_DIR/tmp/cargo-cross
 
 PASS_THROUGH_VARS=$(compgen -A variable | grep '^WAKETIMED_' | awk '{ print "-e " $0; }' | tr '\n' ' ' || true)
 
@@ -73,7 +73,7 @@ $CONTAINER_MGR run \
        --privileged \
        --tmpfs "$HOME" \
        -v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket \
-       -v "$PROJECT_DIR/tmp/cargo:$HOME/.cargo:z" \
+       -v "$PROJECT_DIR/tmp/cargo-cross:$HOME/.cargo:z" \
        -v "$PROJECT_DIR:$HOME/waketimed:z" \
        -e "HOME=$HOME" \
        -e "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.cargo/bin" \
