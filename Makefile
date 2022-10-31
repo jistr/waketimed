@@ -108,7 +108,7 @@ cross-toolbox-clean:
 	$(CONTAINER_MGR) rmi localhost/waketimed_toolbox_cross:latest || true
 
 cross-prep-cargo:
-	if ! grep /usr/bin/aarch64-linux-gnu-gcc tmp/cargo/config &> /dev/null; then \
-		echo '[target.aarch64-unknown-linux-gnu]' >>tmp/cargo/config; \
-		echo 'linker = "/usr/bin/aarch64-linux-gnu-gcc"' >>tmp/cargo/config; \
+	if ! grep /usr/bin/aarch64-linux-gnu-gcc tmp/cargo-cross/config &> /dev/null; then \
+		echo '[target.aarch64-unknown-linux-gnu]' >>tmp/cargo-cross/config; \
+		echo 'linker = "/usr/bin/aarch64-linux-gnu-gcc"' >>tmp/cargo-cross/config; \
 	fi

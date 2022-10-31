@@ -23,12 +23,19 @@ anyhow = "1.0.66"
 async-trait = "0.1.58"
 chrono = "0.4.22"
 env_logger = "0.9.1"
+futures-util = "0.3.25"
 getset = "0.1.2"
 lazy_static = "1.4.0"
 log = "0.4.17"
 nix = "0.25.0"
 regex = "1.6.0"
-rhai = { version = "1.10.1", features = ["no_object", "no_function", "no_module", "no_closure"] }
+# Rhai is temporarily pinned to 1.7.0 because that's the last version
+# which doesn't cause issues on cargo version 1.56 which is presently
+# in Debian. Once Debian (testing/unstable?) moves to cargo >=1.60, we
+# can update Rhai.
+# https://github.com/rust-lang/cargo/issues/10623
+# rhai = { version = "1.10.1", features = ["no_object", "no_function", "no_module", "no_closure"] }
+rhai = { version = "1.7.0", features = ["no_object", "no_function", "no_module", "no_closure"] }
 rust-embed = { version = "6.4.2", features = ["debug-embed"] }
 serde = "1.0.147"
 serde_derive = "1.0.147"
@@ -36,7 +43,7 @@ serde_yaml = "0.9.14"
 signal-hook = "0.3.14"
 thiserror = "1.0.37"
 tokio = { version = "1.21.2", features = ["rt", "rt-multi-thread", "net", "sync", "time"] }
-zbus = { version = "3.3.0", default-features = false, features = ["tokio"] }
-# zbus_macros = "2.1.1"
-# zbus_polkit = "2.0.1"
+# https://github.com/rust-lang/cargo/issues/10623
+# zbus = { version = "3.3.0", default-features = false, features = ["tokio"] }
+zbus = { version = "2.3.2", default-features = false, features = ["tokio"] }
 zvariant = "3.7.1"
