@@ -1,6 +1,6 @@
 log: waketimed=debug
 config_dir: /opt/waketimed-devel/config
 startup_awake_time: 30000
-minimum_awake_time: 10000
+minimum_awake_time: 20000
 stayup_cleared_awake_time: 10000
 poll_variable_interval: 3000

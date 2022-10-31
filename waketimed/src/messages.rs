@@ -4,6 +4,8 @@ use crate::core::vars::{VarDef, VarName, VarValue};
 pub enum EngineMsg {
     PollVarsTick,
     ReturnVarPoll(VarName, Option<VarValue>),
+    SystemIsResuming,
+    SystemIsSuspending,
     Terminate,
 }
 
@@ -16,4 +18,5 @@ pub enum WorkerMsg {
     // Suspend(test_mode)
     Suspend(bool),
     Terminate,
+    WatchPrepareForSleep,
 }
