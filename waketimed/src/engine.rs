@@ -173,6 +173,7 @@ impl Engine {
                     .spawn_poll_var_interval()
                     .context("Fatal: Failed to set up variable poll interval.");
                 self.term_on_err(res);
+                self.sleep_manager.log_info_nearest_possible_suspend();
             }
             _ => {}
         }
