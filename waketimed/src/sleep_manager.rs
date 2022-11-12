@@ -60,6 +60,14 @@ impl SleepManager {
         .expect("Error trying to bump nearest suspend time.");
     }
 
+    pub fn log_info_nearest_possible_suspend(&self) {
+        info!(
+            "Nearest possible suspend: {}",
+            time::from_suspend_to_utc(self.nearest_possible_suspend)
+                .expect("Failed to compute nearest possible suspend time.")
+        );
+    }
+
     pub fn handle_system_is_suspending(&mut self) {
         info!("System is suspending.");
         self.suspend_in_progress = true;

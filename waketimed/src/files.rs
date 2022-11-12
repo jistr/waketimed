@@ -23,7 +23,7 @@ pub fn load_rule_defs(cfg: &Config) -> Result<HashMap<RuleName, RuleDef>, AnyErr
     let mut rule_defs = HashMap::new();
     for def_path in unique_paths.iter() {
         debug!("Loading rule def '{}'.", def_path.display());
-        let rule_def = parse_rule_def(&def_path)?;
+        let rule_def = parse_rule_def(def_path)?;
         match rule_def {
             Some(def) => {
                 rule_defs.insert(def.name().clone(), def);
@@ -48,7 +48,7 @@ pub fn load_var_defs(cfg: &Config) -> Result<HashMap<VarName, VarDef>, AnyError>
     let mut var_defs = HashMap::new();
     for def_path in unique_paths.iter() {
         debug!("Loading var def '{}'.", def_path.display());
-        let var_def = parse_var_def(&def_path)?;
+        let var_def = parse_var_def(def_path)?;
         match var_def {
             Some(def) => {
                 var_defs.insert(def.name().clone(), def);
@@ -119,7 +119,7 @@ fn parse_embedded_yaml_file_unless_empty<T: DeserializeOwned, P: AsRef<Path>>(
         return Ok(None);
     }
 
-    let data_string = String::from_utf8_lossy(&*data);
+    let data_string = String::from_utf8_lossy(&data);
     let parsed: T = serde_yaml::from_str(&data_string)
         .with_context(|| format!("Cannot parse file '{}'", file_path.as_ref().display(),))?;
     Ok(Some(parsed))

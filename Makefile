@@ -3,6 +3,8 @@ SHELL := /bin/bash
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 CONTAINER_MGR ?= podman
+KEEP_TOOLBOX_IMAGES ?= 2
+
 WAKETIMED_BUILD_PROFILE ?= --release
 WAKETIMED_INSTALL_PROFILE ?= release
 WAKETIMED_INSTALL_BIN_DIR ?= /usr/local/bin
@@ -96,16 +98,38 @@ toolbox-build:
 	$(CONTAINER_MGR) build --no-cache -t localhost/waketimed_toolbox_builder:latest . && \
 	$(CONTAINER_MGR) tag localhost/waketimed_toolbox_builder:latest localhost/waketimed_toolbox_builder:$$(date "+%Y_%m_%d")
 
-toolbox-clean:
+toolbox-clean: KEEP_TOOLBOX_IMAGES=0
+toolbox-clean: toolbox-expire
 	$(CONTAINER_MGR) rmi localhost/waketimed_toolbox_builder:latest || true
+
+toolbox-expire:
+	TAGS=$$(podman images | grep '^localhost/waketimed_toolbox_builder ' | grep -E ' [0-9]{4}_[0-9]{2}_[0-9]{2} ' | awk '{ print $$2;}' | sort -r); \
+	IDX=0 ; \
+	for TAG in $$TAGS; do \
+		if [ "$$IDX" -ge "$(KEEP_TOOLBOX_IMAGES)" ]; then \
+			podman rmi localhost/waketimed_toolbox_builder:$$TAG; \
+		fi; \
+		: $$(( IDX++ )); \
+	done
 
 cross-toolbox-build:
 	cd toolbox && \
 	$(CONTAINER_MGR) build --no-cache -f Containerfile_cross -t localhost/waketimed_toolbox_cross:latest . && \
 	$(CONTAINER_MGR) tag localhost/waketimed_toolbox_cross:latest localhost/waketimed_toolbox_cross:$$(date "+%Y_%m_%d")
 
-cross-toolbox-clean:
+cross-toolbox-clean: KEEP_TOOLBOX_IMAGES=0
+cross-toolbox-clean: cross-toolbox-expire
 	$(CONTAINER_MGR) rmi localhost/waketimed_toolbox_cross:latest || true
+
+cross-toolbox-expire:
+	TAGS=$$(podman images | grep '^localhost/waketimed_toolbox_cross ' | grep -E ' [0-9]{4}_[0-9]{2}_[0-9]{2} ' | awk '{ print $$2;}' | sort -r); \
+	IDX=0 ; \
+	for TAG in $$TAGS; do \
+		if [ "$$IDX" -ge "$(KEEP_TOOLBOX_IMAGES)" ]; then \
+			podman rmi localhost/waketimed_toolbox_cross:$$TAG; \
+		fi; \
+		: $$(( IDX++ )); \
+	done
 
 cross-prep-cargo:
 	if ! grep /usr/bin/aarch64-linux-gnu-gcc tmp/cargo-cross/config &> /dev/null; then \

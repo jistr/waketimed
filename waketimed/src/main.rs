@@ -41,7 +41,11 @@ fn main() -> Result<(), AnyError> {
 
     let worker_thread = worker_thread_spawn(worker_recv, engine_send.clone());
     let signal_thread = signal_thread_spawn(engine_send.clone())?;
-    main_thread_main(cfg, engine_recv, engine_send, worker_send)?;
+    // We return the engine_recv back from main_thread_main to ensure
+    // it is only cleaned up after joining the worker thread,
+    // otherwise the worker thread might fail on not being able to
+    // send a message to engine.
+    let _engine_recv = main_thread_main(cfg, engine_recv, engine_send, worker_send)?;
     trace!("Joining signal thread.");
     signal_thread.join().expect("Failed to join signal thread.");
     trace!("Joining worker thread.");
@@ -61,7 +65,7 @@ fn main_thread_main(
     mut engine_recv: UnboundedReceiver<EngineMsg>,
     engine_send: UnboundedSender<EngineMsg>,
     worker_send: UnboundedSender<WorkerMsg>,
-) -> Result<(), AnyError> {
+) -> Result<UnboundedReceiver<EngineMsg>, AnyError> {
     let mut engine = Engine::new(Rc::new(cfg), engine_send, worker_send)?;
     engine.init()?;
     while let Some(msg) = engine_recv.blocking_recv() {
@@ -72,7 +76,7 @@ fn main_thread_main(
         }
     }
     trace!("Exiting main thread loop.");
-    Ok(())
+    Ok(engine_recv)
 }
 
 fn worker_thread_spawn(
@@ -105,7 +109,7 @@ async fn worker_thread_main(
 fn signal_thread_spawn(
     engine_send: UnboundedSender<EngineMsg>,
 ) -> Result<JoinHandle<()>, AnyError> {
-    let mut signals = Signals::new(&[SIGINT, SIGTERM])?;
+    let mut signals = Signals::new([SIGINT, SIGTERM])?;
     Ok(thread::Builder::new()
         .name("signal".to_string())
         .spawn(move || {

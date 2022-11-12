@@ -39,7 +39,7 @@ pub fn embedded_dir_entry_paths<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, 
 
 pub fn embedded_file_data<P: AsRef<Path>>(path: P) -> Result<Cow<'static, [u8]>, AnyError> {
     let path_ref: &Path = path.as_ref();
-    let path_str: &str = &*path.as_ref().to_string_lossy();
+    let path_str: &str = &path.as_ref().to_string_lossy();
     let data: Option<Cow<'static, [u8]>> = if path_ref.starts_with(PREFIX_RULE_DEF) {
         EmbeddedRuleDefs::get(path_str).map(|file| file.data)
     } else if path_ref.starts_with(PREFIX_VAR_DEF) {

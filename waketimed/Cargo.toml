@@ -1,6 +1,6 @@
 [package]
 name = "waketimed"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["waketimed project contributors"]
 license = "Apache-2.0"
 readme = "../README.md"
@@ -35,7 +35,7 @@ regex = "1.6.0"
 # can update Rhai.
 # https://github.com/rust-lang/cargo/issues/10623
 # rhai = { version = "1.10.1", features = ["no_object", "no_function", "no_module", "no_closure"] }
-rhai = { version = "1.7.0", features = ["no_object", "no_function", "no_module", "no_closure"] }
+rhai = { version = "= 1.7.0", features = ["no_object", "no_function", "no_module", "no_closure"] }
 rust-embed = { version = "6.4.2", features = ["debug-embed"] }
 serde = "1.0.147"
 serde_derive = "1.0.147"
@@ -45,5 +45,5 @@ thiserror = "1.0.37"
 tokio = { version = "1.21.2", features = ["rt", "rt-multi-thread", "net", "sync", "time"] }
 # https://github.com/rust-lang/cargo/issues/10623
 # zbus = { version = "3.3.0", default-features = false, features = ["tokio"] }
-zbus = { version = "2.3.2", default-features = false, features = ["tokio"] }
+zbus = { version = "= 2.3.2", default-features = false, features = ["tokio"] }
 zvariant = "3.7.1"
