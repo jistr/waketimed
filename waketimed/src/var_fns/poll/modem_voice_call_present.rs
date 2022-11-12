@@ -58,7 +58,7 @@ async fn fetch_voice_devices(system_dbus_conn: &ZbusConnection) -> Option<Vec<St
             "/org/freedesktop/ModemManager1",
             Some("org.freedesktop.DBus.ObjectManager"),
             "GetManagedObjects",
-            &[] as &[&'static str; 0],
+            &(),
         )
         .await;
     process_list_devices_result(list_devices_res)
@@ -88,7 +88,7 @@ async fn device_has_calls_present(system_dbus_conn: &ZbusConnection, device_path
             device_path,
             Some("org.freedesktop.ModemManager1.Modem.Voice"),
             "ListCalls",
-            &[] as &[&'static str; 0],
+            &(),
         )
         .await;
     process_has_calls_result(list_calls_res)
