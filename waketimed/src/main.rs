@@ -109,7 +109,7 @@ async fn worker_thread_main(
 fn signal_thread_spawn(
     engine_send: UnboundedSender<EngineMsg>,
 ) -> Result<JoinHandle<()>, AnyError> {
-    let mut signals = Signals::new(&[SIGINT, SIGTERM])?;
+    let mut signals = Signals::new([SIGINT, SIGTERM])?;
     Ok(thread::Builder::new()
         .name("signal".to_string())
         .spawn(move || {
