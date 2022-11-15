@@ -10,34 +10,34 @@ compiling on.
 
   On Mobian:
 
-      ```
-      sudo apt-get install cargo git make
-      ```
+  ```
+  sudo apt-get install cargo git make
+  ```
 
 * **Get the code.**
 
-      ```
-      git clone https://github.com/jistr/waketimed
-      cd waketimed
-      ```
+  ```
+  git clone https://github.com/jistr/waketimed
+  cd waketimed
+  ```
 
 * **Compile.**
 
-      ```
-      make
-      ```
+  ```
+  make
+  ```
 
 * **Install binary.**
 
-      ```
-      sudo make install
-      ```
+  ```
+  sudo make install
+  ```
 
 * **Install systemd service file, enable and start the service.**
 
-      ```
-      sudo make install-service
-      sudo systemctl daemon-reload
-      sudo systemctl enable waketimed.service
-      sudo systemctl start waketimed.service
-      ```
+  ```
+  sudo make install-service
+  sudo systemctl daemon-reload
+  sudo systemctl enable waketimed.service
+  sudo systemctl start waketimed.service
+  ```
