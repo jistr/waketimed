@@ -132,6 +132,7 @@ cross-toolbox-expire:
 	done
 
 cross-prep-cargo:
+	mkdir -p tmp/cargo-cross; \
 	if ! grep /usr/bin/aarch64-linux-gnu-gcc tmp/cargo-cross/config &> /dev/null; then \
 		echo '[target.aarch64-unknown-linux-gnu]' >>tmp/cargo-cross/config; \
 		echo 'linker = "/usr/bin/aarch64-linux-gnu-gcc"' >>tmp/cargo-cross/config; \

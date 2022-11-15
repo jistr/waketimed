@@ -6,9 +6,10 @@
 
 ## Project goal
 
-**Waketimed is an experimental daemon for managing the sleep/wake
-cycle of Linux phones and similar devices. It aims to keep the device
-sleeping as much as possible to preserve battery life.**
+**Waketimed is an experimental and overengineered daemon for managing
+the sleep/wake cycle of Linux phones and similar devices. It aims to
+keep the device sleeping as much as possible to preserve battery
+life.**
 
 ## Implementation status
 
