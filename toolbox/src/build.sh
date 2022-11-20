@@ -14,6 +14,7 @@ dnf -y install \
     git \
     make \
     openssl-devel \
+    rust-analyzer \
     rustfmt \
 
 dnf clean all
