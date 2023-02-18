@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+        with:
+          # needed to lint commit messages
+          fetch-depth: 0
 
       - uses: dorny/paths-filter@v2
         id: files_changed

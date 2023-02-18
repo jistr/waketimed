@@ -24,8 +24,11 @@ MAX_FIRST_LINE_LENGTH=75
 
 function lint_commit_message() {
     local commit_msg="$1"
+    # remove everything below the cut
+    commit_msg=$(sed '/^# ------------------------ >8 ------------------------/q' <<<"$commit_msg")
+    # ignore all comment lines
+    commit_msg=$(sed '/^#/d' <<<"$commit_msg")
     local first_line=$(head -n1 <<<"$commit_msg")
-
     local first_line_length=$(wc -c <<<"$first_line")
     if [ "$first_line_length" -gt $MAX_FIRST_LINE_LENGTH ]; then
         error_header_first_line "$first_line"
