@@ -10,7 +10,7 @@ pub enum VarValue {
 impl fmt::Display for VarValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
-            VarValue::Bool(v) => write!(f, "{}", v),
+            VarValue::Bool(v) => write!(f, "{v}"),
         }
     }
 }

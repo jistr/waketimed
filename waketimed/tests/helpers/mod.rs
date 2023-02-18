@@ -132,7 +132,7 @@ impl Supervisor {
                 line_buf.clear();
             }
         })
-        .with_context(|| format!("Failed waiting for stderr substrings {:?}", substrs))
+        .with_context(|| format!("Failed waiting for stderr substrings {substrs:?}"))
     }
 
     pub fn wait_upto_ms_or_kill<R: 'static, F: 'static>(
